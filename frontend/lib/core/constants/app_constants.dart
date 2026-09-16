@@ -17,9 +17,18 @@ class AppConstants {
   static const String baseUrlMobileLan = 'http://192.168.1.7:5000';
 
   // Active Base URL:
-  // • Web browser  → Vercel production (no CORS issue)
-  // • Android APK  → LAN backend at 192.168.1.7:5000 (until Vercel DB is fixed)
-  static String get baseUrl => kIsWeb ? baseUrlProduction : baseUrlMobileLan;
+  // • Web browser        → Vercel production (no CORS issue)
+  // • Release Android    → Vercel production (LAN IP unreachable outside Wi-Fi)
+  // • Debug Android      → LAN backend at 192.168.1.7:5000 (fast local dev)
+  static String get baseUrl {
+    if (kIsWeb) return baseUrlProduction;              // Web always → production
+    if (kReleaseMode) return baseUrlProduction;        // Release APK → production
+    return baseUrlMobileLan;                           // Debug on device → LAN
+  }
+
+  // Login timeout: 15 s for production (Vercel cold-start), 8 s for LAN
+  static Duration get loginTimeout =>
+      kReleaseMode ? const Duration(seconds: 15) : const Duration(seconds: 8);
 
   static const List<String> classes = [
     '6th Standard',

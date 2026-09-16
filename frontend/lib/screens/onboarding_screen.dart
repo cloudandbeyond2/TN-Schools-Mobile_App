@@ -258,7 +258,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           'rollNumber': rollNumber,
           'phone': phone,
         }),
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(AppConstants.loginTimeout);
 
       final Map<String, dynamic> data = jsonDecode(response.body);
 
