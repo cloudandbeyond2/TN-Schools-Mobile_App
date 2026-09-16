@@ -354,8 +354,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // ─── Start Server ─────────────────────────────────────────────
 let server: any;
 if (!process.env.VERCEL) {
-  server = app.listen(port, () => {
+  server = app.listen(Number(port), '0.0.0.0', () => {
     console.log(`\n🚀  TN Schools API → http://localhost:${port}`);
+    console.log(`📱  LAN Access : http://192.168.1.7:${port}  ← use this on real mobile`);
     console.log(`📦  MongoDB   : Atlas Cluster`);
     console.log(`🐘  PostgreSQL: Google Cloud SQL`);
     console.log(`🌍  Env       : ${process.env.NODE_ENV || 'development'}`);
