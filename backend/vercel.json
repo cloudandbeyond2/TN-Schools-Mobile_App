@@ -1,20 +1,30 @@
 {
   "version": 2,
-  "headers": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,PATCH,DELETE,OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type,Authorization,Accept,Origin,X-Requested-With,Cache-Control,Pragma" },
-        { "key": "Access-Control-Max-Age", "value": "86400" }
-      ]
-    }
-  ],
-  "rewrites": [
+      "src": "/api/(.*)",
+      "methods": ["OPTIONS"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,Accept,Origin,X-Requested-With,Cache-Control,Pragma",
+        "Access-Control-Max-Age": "86400"
+      },
+      "status": 204,
+      "continue": false
+    },
     {
-      "source": "/(.*)",
-      "destination": "/src/index.ts"
+      "src": "/api/(.*)",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,Accept,Origin,X-Requested-With,Cache-Control,Pragma"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/index.ts"
     }
   ]
-}
+}
