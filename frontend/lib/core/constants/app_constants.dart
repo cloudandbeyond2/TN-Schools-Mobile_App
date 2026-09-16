@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class AppConstants {
   // ===========================================================================
   // Backend API Base URL Configuration
@@ -15,11 +17,9 @@ class AppConstants {
   static const String baseUrlMobileLan = 'http://192.168.1.7:5000';
 
   // Active Base URL:
-  // • baseUrlLocal (http://localhost:5000) for local development (Chrome web / desktop)
-  // • baseUrlMobileLan (http://192.168.1.7:5000) for real physical mobile phone on Wi-Fi
-  // • baseUrlEmulator (http://10.0.2.2:5000) for Android emulator
-  // • baseUrlProduction (https://tn-schools-mobile-app-backend.vercel.app) for Vercel
-  static const String baseUrl = baseUrlProduction;
+  // • Web browser  → Vercel production (no CORS issue)
+  // • Android APK  → LAN backend at 192.168.1.7:5000 (until Vercel DB is fixed)
+  static String get baseUrl => kIsWeb ? baseUrlProduction : baseUrlMobileLan;
 
   static const List<String> classes = [
     '6th Standard',

@@ -22,7 +22,7 @@ class _TimetableAttendanceScreenState
   // Base URL Options:
   // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
   // Option 2: Localhost Development -> http://localhost:5000
-  static const String _baseUrl = AppConstants.baseUrl;
+  static String get _baseUrl => AppConstants.baseUrl;
 
   int _selectedDayIndex = 0; // Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5
   final List<String> _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

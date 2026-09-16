@@ -17,7 +17,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   // Base URL Options:
   // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
   // Option 2: Localhost Development -> http://localhost:5000
-  static const String _baseUrl = AppConstants.baseUrl;
+  static String get _baseUrl => AppConstants.baseUrl;
 
   int _currentStep = 0; // 0: Welcome, 1: Login
   bool _rememberMe = true;

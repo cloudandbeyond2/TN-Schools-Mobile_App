@@ -265,7 +265,7 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
   // Base URL Options:
   // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
   // Option 2: Localhost Development -> http://localhost:5000
-  static const String _baseUrl = AppConstants.baseUrl;
+  static String get _baseUrl => AppConstants.baseUrl;
 
   bool _isLoading = true;
   List<SubjectProgressData> _subjectList = [];

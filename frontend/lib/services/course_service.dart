@@ -14,7 +14,7 @@ class CourseService extends ChangeNotifier {
   // Base URL Options:
   // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
   // Option 2: Localhost Development -> http://localhost:5000
-  static const String _baseUrl = AppConstants.baseUrl;
+  static String get _baseUrl => AppConstants.baseUrl;
 
   Student _student = const Student(
     id: 'f7bfdf58-6567-4f68-ab56-4cac65df54a5',
