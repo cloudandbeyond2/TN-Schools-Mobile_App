@@ -2,13 +2,22 @@ class AppConstants {
   // ===========================================================================
   // Backend API Base URL Configuration
   // ===========================================================================
-  // Option 1: Production (Vercel)
+  // Option 1: Production (Vercel Cloud)
   static const String baseUrlProduction = 'https://tn-schools-mobile-app-backend.vercel.app';
 
-  // Option 2: Localhost Development
+  // Option 2: Localhost Development (Flutter Web & Desktop)
   static const String baseUrlLocal = 'http://localhost:5000';
 
-  // Active Base URL: Connecting to Vercel Production
+  // Option 3: Android Emulator (maps 10.0.2.2 to PC localhost:5000)
+  static const String baseUrlEmulator = 'http://10.0.2.2:5000';
+
+  // Option 4: Real Mobile Device on same Wi-Fi (PC LAN IP)
+  static const String baseUrlMobileLan = 'http://192.168.1.7:5000';
+
+  // Active Base URL: Choose your target environment
+  // • Set to baseUrlProduction for Vercel backend
+  // • Set to baseUrlMobileLan for real mobile phone on Wi-Fi with local backend
+  // • Set to baseUrlEmulator for Android emulator with local backend
   static const String baseUrl = baseUrlProduction;
 
   static const List<String> classes = [
