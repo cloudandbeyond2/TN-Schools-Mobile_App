@@ -19,7 +19,7 @@ class AppConstants {
   // • baseUrlMobileLan (http://192.168.1.7:5000) for real physical mobile phone on Wi-Fi
   // • baseUrlEmulator (http://10.0.2.2:5000) for Android emulator
   // • baseUrlProduction (https://tn-schools-mobile-app-backend.vercel.app) for Vercel
-  static const String baseUrl = baseUrlLocal;
+  static const String baseUrl = baseUrlProduction;
 
   static const List<String> classes = [
     '6th Standard',
