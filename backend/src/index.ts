@@ -77,11 +77,14 @@ const port = process.env.PORT || 5000;
 
 // ─── Vercel Serverless Path Normalization ────────────────────────
 app.use((req: Request, res: Response, next: NextFunction) => {
-  if (req.url.startsWith('/src/index.ts')) {
-    req.url = req.url.replace('/src/index.ts', '') || '/';
-  }
-  if (req.originalUrl && req.url === '/src/index.ts') {
+  const matchedPath = (req.headers['x-matched-path'] || req.headers['x-forwarded-url'] || req.headers['x-invoke-path']) as string | undefined;
+
+  if (req.originalUrl && req.originalUrl !== '/src/index.ts' && !req.originalUrl.startsWith('/src/index.ts?')) {
     req.url = req.originalUrl;
+  } else if (matchedPath && matchedPath !== '/src/index.ts' && !matchedPath.startsWith('/src/index.ts?')) {
+    req.url = matchedPath;
+  } else if (req.url.startsWith('/src/index.ts')) {
+    req.url = req.url.replace(/^\/src\/index\.ts/, '') || '/';
   }
   next();
 });
@@ -97,7 +100,7 @@ const allowedOrigins = [
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, server-to-server, curl)
+    // Mobile apps (Android/iOS), curl, Postman have no origin
     if (!origin) return callback(null, true);
 
     const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
@@ -107,12 +110,13 @@ const corsOptions: cors.CorsOptions = {
       isLocalhost ||
       isVercel ||
       allowedOrigins.includes(origin) ||
-      process.env.NODE_ENV === 'development'
+      process.env.NODE_ENV !== 'production' ||
+      origin.startsWith('http://localhost')
     ) {
       return callback(null, true);
     }
 
-    return callback(null, false);
+    return callback(null, true); // Allow all origins for mobile/web clients
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -129,8 +133,14 @@ const corsOptions: cors.CorsOptions = {
 
 app.use(cors(corsOptions));
 
-// Preflight must use the same strict options as regular requests
-app.options("*", cors(corsOptions));
+// Handle all OPTIONS preflight requests immediately so browser preflight never fails or hits 404/401
+app.options(/(.*)/, cors(corsOptions));
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 // ─── Security Headers ────────────────────────────────────────────
 app.use(helmet({
