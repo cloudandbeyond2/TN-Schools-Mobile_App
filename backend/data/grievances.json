@@ -1,0 +1,26 @@
+[
+  {
+    "id": "grv-1",
+    "schoolId": "d9962dbb-f572-47a4-8240-6eef99b5c5bb",
+    "topic": "Transport facility delays in Zone B",
+    "raisedBy": "12 parents",
+    "status": "Under Review",
+    "createdAt": "2026-09-02T08:48:25.197Z"
+  },
+  {
+    "id": "grv-2",
+    "schoolId": "d9962dbb-f572-47a4-8240-6eef99b5c5bb",
+    "topic": "Request for extra special classes for 10th",
+    "raisedBy": "PTA Committee",
+    "status": "Approved",
+    "createdAt": "2026-09-02T08:48:25.197Z"
+  },
+  {
+    "id": "grv-3",
+    "schoolId": "d9962dbb-f572-47a4-8240-6eef99b5c5bb",
+    "topic": "RO Water filter service required in block C",
+    "raisedBy": "Class 7 Representative",
+    "status": "Resolved",
+    "createdAt": "2026-09-02T08:48:25.197Z"
+  }
+]

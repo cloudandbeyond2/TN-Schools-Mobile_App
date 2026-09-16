@@ -1,0 +1,22 @@
+# Node
+**/node_modules/
+
+# Environment
+**/.env
+**/.env.*
+!.env.example
+
+# Backend uploads - don't push PDFs/files
+backend/uploads/
+
+# Flutter
+**/.dart_tool/
+**/build/
+
+# IDE
+**/.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

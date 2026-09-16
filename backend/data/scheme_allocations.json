@@ -1,0 +1,53 @@
+{
+  "allocations": {
+    "textbooks": {
+      "disbursedClasses": [
+        "6"
+      ]
+    },
+    "buspass": {
+      "disbursedClasses": [],
+      "link": "https://www.tnstc.in"
+    },
+    "bicycles": {
+      "disbursedClasses": []
+    },
+    "laptops": {
+      "disbursedClasses": []
+    },
+    "uniforms": {
+      "disbursedClasses": []
+    },
+    "noonmeal": {
+      "disbursedClasses": []
+    },
+    "naanmudhalvan": {
+      "disbursedClasses": [],
+      "link": "https://www.naanmudhalvan.tn.gov.in"
+    },
+    "pudhumai_pudhalvan": {
+      "disbursedClasses": [],
+      "link": "https://penkalvi.tn.gov.in"
+    },
+    "7_5_reservation": {
+      "disbursedClasses": [],
+      "link": "https://www.tneaonline.org"
+    },
+    "trusts": {
+      "disbursedClasses": []
+    }
+  },
+  "beneficiaries": [
+    {
+      "id": "ben-1788759965436-1",
+      "studentName": "Class 6 Student Batch",
+      "classSection": "6A",
+      "emisId": "33012345676",
+      "schemeId": "textbooks",
+      "schemeName": "Free Textbooks & Notebooks",
+      "status": "Disbursed",
+      "updatedOn": "2026-09-07"
+    }
+  ],
+  "updatedAt": "2026-09-07T05:46:05.438Z"
+}

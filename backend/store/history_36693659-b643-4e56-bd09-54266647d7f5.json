@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "year": "1955",
+    "title": "School Founding Year",
+    "details": "GHS Coimbatore established in a single-room thatch roof hut with 15 students and 1 teacher.",
+    "icon": "🏫"
+  },
+  {
+    "id": 2,
+    "year": "1972",
+    "title": "High School Roster Status",
+    "details": "Formally recognized by Tamil Nadu State Education Department as a government High School (Class 6-10).",
+    "icon": "📐"
+  },
+  {
+    "id": 3,
+    "year": "1991",
+    "title": "Science Lab Wing Built",
+    "details": "First brick-and-mortar wing built for laboratory experimentation with basic glassware.",
+    "icon": "🔬"
+  },
+  {
+    "id": 4,
+    "year": "2011",
+    "title": "Computer Lab Center",
+    "details": "Inaugurated our first computer laboratory with 15 donated desktops and basic typing tutor sessions.",
+    "icon": "💻"
+  },
+  {
+    "id": 5,
+    "year": "2022",
+    "title": "AI Smart Classrooms Setup",
+    "details": "Installation of the first smart screen boards and tablets for interactive digital learning models.",
+    "icon": "🤖"
+  }
+]
