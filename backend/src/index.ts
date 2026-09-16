@@ -99,26 +99,8 @@ const allowedOrigins = [
 ];
 
 const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    // Mobile apps (Android/iOS), curl, Postman have no origin
-    if (!origin) return callback(null, true);
-
-    const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
-    const isVercel = /^https:\/\/tn-schools(-[a-z0-9-]+)?\.vercel\.app$/i.test(origin);
-
-    if (
-      isLocalhost ||
-      isVercel ||
-      allowedOrigins.includes(origin) ||
-      process.env.NODE_ENV !== 'production' ||
-      origin.startsWith('http://localhost')
-    ) {
-      return callback(null, true);
-    }
-
-    return callback(null, true); // Allow all origins for mobile/web clients
-  },
-  credentials: true,
+  origin: '*',
+  credentials: false, // must be false when origin is '*'
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
