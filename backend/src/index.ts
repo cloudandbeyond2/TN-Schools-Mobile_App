@@ -232,7 +232,7 @@ app.get('/', async (req: Request, res: Response) => {
   res.json({
     status: 'ok',
     message: 'TN Schools AI Ecosystem API',
-    version: '1.0.0',
+    version: '2.0.0-test-deploy',
     timestamp: new Date().toISOString(),
     databases: {
       mongodb: 'connected',
