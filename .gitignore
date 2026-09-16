@@ -8,7 +8,8 @@
 
 # Backend uploads - don't push PDFs/files
 backend/uploads/
-!**/.env.example
+# Ignore .env.example too
+**/.env.example
 # Flutter
 **/.dart_tool/
 **/build/
