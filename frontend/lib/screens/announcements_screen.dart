@@ -7,6 +7,7 @@ import '../core/localization/app_localization.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../services/course_service.dart';
 import '../utils/pdf_downloader.dart';
+import '../core/constants/app_constants.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -16,7 +17,10 @@ class AnnouncementsScreen extends StatefulWidget {
 }
 
 class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
-  static const String _baseUrl = 'http://localhost:5000';
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
 
   int _selectedFilterIndex = 0;
   final Set<String> _bookmarkedIds = {};

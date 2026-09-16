@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../core/localization/app_localization.dart';
 import '../services/course_service.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../core/constants/app_constants.dart';
 
 class CareerGuidanceScreen extends StatefulWidget {
   const CareerGuidanceScreen({super.key});
@@ -16,7 +17,10 @@ class CareerGuidanceScreen extends StatefulWidget {
 }
 
 class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
-  static const String _baseUrl = 'http://localhost:5000';
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
 
   String _activeTab = 'calendar'; // 'calendar' | 'marks'
   bool _isLoadingExams = false;
@@ -109,7 +113,8 @@ class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
       final url = '$_baseUrl/api/exam-schedule${params.isNotEmpty ? '?${params.join('&')}' : ''}';
       debugPrint('📝 Fetching exams: $url');
 
-      final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+      final courseService = Provider.of<CourseService>(context, listen: false);
+      final res = await http.get(Uri.parse(url), headers: courseService.authHeaders).timeout(const Duration(seconds: 8));
 
       if (res.statusCode == 200) {
         final json = jsonDecode(res.body);

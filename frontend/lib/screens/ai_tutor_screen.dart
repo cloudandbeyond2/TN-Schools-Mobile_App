@@ -8,6 +8,7 @@ import '../core/localization/app_localization.dart';
 import '../services/course_service.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../utils/speech_audio_helper.dart';
+import '../core/constants/app_constants.dart';
 
 class AITutorScreen extends StatefulWidget {
   final String? initialSubject;
@@ -78,7 +79,10 @@ class _SavedSession {
 
 class _AITutorScreenState extends State<AITutorScreen>
     with SingleTickerProviderStateMixin {
-  static const String _baseUrl = 'http://localhost:5000';
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
 
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();

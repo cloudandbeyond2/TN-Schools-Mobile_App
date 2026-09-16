@@ -8,8 +8,14 @@ import '../models/homework.dart';
 import '../models/exam.dart';
 import '../theme/app_theme.dart';
 import '../core/localization/app_localization.dart';
+import '../core/constants/app_constants.dart';
 
 class CourseService extends ChangeNotifier {
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
+
   Student _student = const Student(
     id: 'f7bfdf58-6567-4f68-ab56-4cac65df54a5',
     name: 'Praveen',
@@ -554,7 +560,7 @@ class CourseService extends ChangeNotifier {
         queryParams.add('board=${Uri.encodeComponent(boardOverride)}');
       }
 
-      final url = Uri.parse('http://localhost:5000/api/superadmin/academics/subjects?${queryParams.join('&')}');
+      final url = Uri.parse('$_baseUrl/api/superadmin/academics/subjects?${queryParams.join('&')}');
 
       final headers = <String, String>{
         'Content-Type': 'application/json',
@@ -568,7 +574,7 @@ class CourseService extends ChangeNotifier {
         final targetId = _student.studentId ?? _student.id;
         if (targetId.isNotEmpty && targetId != 's1') {
           try {
-            final profUrl = Uri.parse('http://localhost:5000/api/students/$targetId');
+            final profUrl = Uri.parse('$_baseUrl/api/students/$targetId');
             final profRes = await http.get(profUrl, headers: headers).timeout(const Duration(seconds: 4));
             if (profRes.statusCode == 200) {
               final profData = jsonDecode(profRes.body);
@@ -665,6 +671,11 @@ class CourseService extends ChangeNotifier {
 
   // Getters
   Student get student => _student;
+  Map<String, String> get authHeaders => {
+    'Content-Type': 'application/json',
+    if (_student.token != null && _student.token!.isNotEmpty)
+      'Authorization': 'Bearer ${_student.token}',
+  };
   List<Course> get courses => List.unmodifiable(_courses);
   String get selectedSubjectId => _selectedSubjectId;
   int get currentBottomNavIndex => _currentBottomNavIndex;

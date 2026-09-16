@@ -7,6 +7,7 @@ import '../core/localization/app_localization.dart';
 import '../services/course_service.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/animated_counter.dart';
+import '../core/constants/app_constants.dart';
 
 class TimetableAttendanceScreen extends StatefulWidget {
   const TimetableAttendanceScreen({super.key});
@@ -18,7 +19,10 @@ class TimetableAttendanceScreen extends StatefulWidget {
 
 class _TimetableAttendanceScreenState
     extends State<TimetableAttendanceScreen> {
-  static const String _baseUrl = 'http://localhost:5000';
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
 
   int _selectedDayIndex = 0; // Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5
   final List<String> _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -70,7 +74,7 @@ class _TimetableAttendanceScreenState
       final url = '$_baseUrl/api/timetable${queryParams.isNotEmpty ? '?${queryParams.join('&')}' : ''}';
       debugPrint('📅 Timetable URL: $url');
 
-      final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+      final res = await http.get(Uri.parse(url), headers: courseService.authHeaders).timeout(const Duration(seconds: 8));
 
       if (res.statusCode == 200) {
         final json = jsonDecode(res.body);

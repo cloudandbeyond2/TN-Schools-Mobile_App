@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../services/course_service.dart';
 import '../theme/app_theme.dart';
 import '../core/localization/app_localization.dart';
+import '../core/constants/app_constants.dart';
 
 // ─── 1. CUSTOM PROGRESS INDICATOR ──────────────────────────────────────────
 class CustomProgressIndicator extends StatelessWidget {
@@ -261,7 +262,10 @@ class SubjectWiseProgressSection extends StatefulWidget {
 }
 
 class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection> {
-  static const String _baseUrl = 'http://localhost:5000';
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
 
   bool _isLoading = true;
   List<SubjectProgressData> _subjectList = [];

@@ -11,6 +11,7 @@ import '../widgets/subject_chip.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/pdf_viewer_dialog.dart';
 import '../widgets/video_viewer_dialog.dart';
+import '../core/constants/app_constants.dart';
 
 /// Academic Resource Model from Academics Hub
 class AcademicResource {
@@ -125,7 +126,10 @@ class AllClassesScreen extends StatefulWidget {
 }
 
 class _AllClassesScreenState extends State<AllClassesScreen> {
-  static const String _baseUrl = 'http://localhost:5000';
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
 
   bool _hasInitialFetched = false;
   bool _isLoadingResources = false;
@@ -230,7 +234,7 @@ class _AllClassesScreenState extends State<AllClassesScreen> {
       }
 
       final url = Uri.parse('$_baseUrl/api/superadmin/academics/resources?${queryParams.join('&')}');
-      final res = await http.get(url).timeout(const Duration(seconds: 8));
+      final res = await http.get(url, headers: courseService.authHeaders).timeout(const Duration(seconds: 8));
 
       if (res.statusCode == 200) {
         final List<dynamic> jsonList = jsonDecode(res.body);

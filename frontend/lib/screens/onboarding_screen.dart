@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../services/course_service.dart';
+import '../core/constants/app_constants.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -13,6 +14,11 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
+
   int _currentStep = 0; // 0: Welcome, 1: Login
   bool _rememberMe = true;
   bool _isLoading = false;
@@ -245,7 +251,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:5000/api/users/auth'),
+        Uri.parse('$_baseUrl/api/users/auth'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'loginType': 'student',

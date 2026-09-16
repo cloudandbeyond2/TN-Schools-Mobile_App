@@ -9,6 +9,7 @@ import '../models/homework.dart';
 import '../services/course_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../core/constants/app_constants.dart';
 
 class HomeworkAssignmentsScreen extends StatefulWidget {
   final bool hideBottomNav;
@@ -20,7 +21,10 @@ class HomeworkAssignmentsScreen extends StatefulWidget {
 }
 
 class _HomeworkAssignmentsScreenState extends State<HomeworkAssignmentsScreen> {
-  static const String _baseUrl = 'http://localhost:5000';
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
   bool _isLoadingHomework = false;
   bool _hasInitialFetched = false;
 

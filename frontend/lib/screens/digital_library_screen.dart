@@ -11,6 +11,7 @@ import '../widgets/bottom_nav_bar.dart';
 import '../widgets/embedded_video_player.dart';
 import '../widgets/pdf_viewer_dialog.dart';
 import '../widgets/video_viewer_dialog.dart';
+import '../core/constants/app_constants.dart';
 
 class DigitalLibraryScreen extends StatefulWidget {
   final bool hideBottomNav;
@@ -21,7 +22,10 @@ class DigitalLibraryScreen extends StatefulWidget {
 }
 
 class _DigitalLibraryScreenState extends State<DigitalLibraryScreen> {
-  static const String _baseUrl = 'http://localhost:5000';
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
 
   int _selectedCategoryIndex = -1; // -1: All, 0: Textbooks, 1: Notes, 2: Papers, 3: Videos, 4: Reference
   final TextEditingController _searchController = TextEditingController();
@@ -87,7 +91,7 @@ class _DigitalLibraryScreenState extends State<DigitalLibraryScreen> {
 
       debugPrint('📚 Digital Library: URL → $url');
 
-      final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+      final res = await http.get(Uri.parse(url), headers: courseService.authHeaders).timeout(const Duration(seconds: 10));
 
       if (res.statusCode == 200) {
         final body = jsonDecode(res.body);

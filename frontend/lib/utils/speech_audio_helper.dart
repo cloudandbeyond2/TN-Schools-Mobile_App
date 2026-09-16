@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:html' as html;
+import '../core/constants/app_constants.dart';
 
 /// High-level service for Speech-to-Text (Voice Recognition)
 /// and Text-to-Speech (AI Audio Playback) supporting Tamil and English.
@@ -12,7 +13,10 @@ class SpeechAudioHelper {
   factory SpeechAudioHelper() => _instance;
   SpeechAudioHelper._internal();
 
-  static const String _baseUrl = 'http://localhost:5000';
+  // Base URL Options:
+  // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
+  // Option 2: Localhost Development -> http://localhost:5000
+  static const String _baseUrl = AppConstants.baseUrl;
 
   html.SpeechRecognition? _recognition;
   bool _isListening = false;

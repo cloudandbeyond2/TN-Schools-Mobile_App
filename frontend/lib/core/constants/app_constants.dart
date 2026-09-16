@@ -1,4 +1,16 @@
 class AppConstants {
+  // ===========================================================================
+  // Backend API Base URL Configuration
+  // ===========================================================================
+  // Option 1: Production (Vercel)
+  static const String baseUrlProduction = 'https://tn-schools-mobile-app-backend.vercel.app';
+
+  // Option 2: Localhost Development
+  static const String baseUrlLocal = 'http://localhost:5000';
+
+  // Active Base URL: Connecting to Vercel Production
+  static const String baseUrl = baseUrlProduction;
+
   static const List<String> classes = [
     '6th Standard',
     '7th Standard',
