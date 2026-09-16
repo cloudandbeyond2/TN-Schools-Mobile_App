@@ -14,11 +14,12 @@ class AppConstants {
   // Option 4: Real Mobile Device on same Wi-Fi (PC LAN IP)
   static const String baseUrlMobileLan = 'http://192.168.1.7:5000';
 
-  // Active Base URL: Choose your target environment
-  // • Set to baseUrlProduction for Vercel backend
-  // • Set to baseUrlMobileLan for real mobile phone on Wi-Fi with local backend
-  // • Set to baseUrlEmulator for Android emulator with local backend
-  static const String baseUrl = baseUrlProduction;
+  // Active Base URL:
+  // • baseUrlLocal (http://localhost:5000) for local development (Chrome web / desktop)
+  // • baseUrlMobileLan (http://192.168.1.7:5000) for real physical mobile phone on Wi-Fi
+  // • baseUrlEmulator (http://10.0.2.2:5000) for Android emulator
+  // • baseUrlProduction (https://tn-schools-mobile-app-backend.vercel.app) for Vercel
+  static const String baseUrl = baseUrlLocal;
 
   static const List<String> classes = [
     '6th Standard',
