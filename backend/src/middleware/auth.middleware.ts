@@ -64,50 +64,56 @@ export async function verifyRequestAsync(req: Request): Promise<AuthUser | null>
     const payload = jwt.verify(header.slice(7), getJwtSecret()) as AuthTokenPayload;
     if (!payload.sub || !payload.role) return null;
 
-    // Verify user existence and active status in PostgreSQL User table
-    const dbUser = await prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: { id: true, isActive: true },
-    });
-
-    if (!dbUser) {
-      // Check headmasterStaff table if not found in User table
-      const staff = await prisma.headmasterStaff.findUnique({
+    // Verify user existence and active status in PostgreSQL User table if DB is reachable
+    try {
+      const dbUser = await prisma.user.findUnique({
         where: { id: payload.sub },
-        select: { id: true },
+        select: { id: true, isActive: true },
       });
-      if (staff) {
-        return {
-          id: payload.sub,
-          role: payload.role,
-          schoolId: payload.schoolId ?? null,
-          studentId: payload.studentId ?? null,
-          name: payload.name,
-        };
+
+      if (!dbUser) {
+        // Check headmasterStaff table if not found in User table
+        const staff = await prisma.headmasterStaff.findUnique({
+          where: { id: payload.sub },
+          select: { id: true },
+        });
+        if (staff) {
+          return {
+            id: payload.sub,
+            role: payload.role,
+            schoolId: payload.schoolId ?? null,
+            studentId: payload.studentId ?? null,
+            name: payload.name,
+          };
+        }
+
+        // Check headmasterParent table if not found in User table
+        const parent = await prisma.headmasterParent.findUnique({
+          where: { id: payload.sub },
+          select: { id: true },
+        });
+        if (parent) {
+          return {
+            id: payload.sub,
+            role: payload.role,
+            schoolId: payload.schoolId ?? null,
+            studentId: payload.studentId ?? null,
+            name: payload.name,
+          };
+        }
+
+        // User account was deleted
+        return null;
       }
 
-      // Check headmasterParent table if not found in User table
-      const parent = await prisma.headmasterParent.findUnique({
-        where: { id: payload.sub },
-        select: { id: true },
-      });
-      if (parent) {
-        return {
-          id: payload.sub,
-          role: payload.role,
-          schoolId: payload.schoolId ?? null,
-          studentId: payload.studentId ?? null,
-          name: payload.name,
-        };
+      if (dbUser.isActive === false) {
+        // User account was deactivated
+        return null;
       }
-
-      // User account was deleted
-      return null;
-    }
-
-    if (dbUser.isActive === false) {
-      // User account was deactivated
-      return null;
+    } catch (dbErr) {
+      // If DB is temporarily unreachable or on serverless cold starts,
+      // fallback to the cryptographically-verified JWT payload
+      console.warn('[Auth] Database check skipped due to connection issue, using verified JWT token payload.');
     }
 
     return {

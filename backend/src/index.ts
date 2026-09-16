@@ -75,6 +75,17 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 5000;
 
+// ─── Vercel Serverless Path Normalization ────────────────────────
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.url.startsWith('/src/index.ts')) {
+    req.url = req.url.replace('/src/index.ts', '') || '/';
+  }
+  if (req.originalUrl && req.url === '/src/index.ts') {
+    req.url = req.originalUrl;
+  }
+  next();
+});
+
 // ─── CORS Configuration ──────────────────────────────────────────────
 // Define allowed origins based on environment
 const allowedOrigins = [
@@ -239,27 +250,29 @@ const PUBLIC_PATHS = [
 
 // ─── Global Authentication Guard (Fail-Closed) ─────────────────
 app.use((req: Request, res: Response, next: NextFunction) => {
+  const checkPath = (req.originalUrl || req.url || req.path || '').split('?')[0];
   if (
-    req.path === '/' ||
-    req.path.startsWith('/uploads/') ||
-    req.path.startsWith('/api/portfolio') ||
-    req.path.startsWith('/api/counsellor') ||
-    req.path.startsWith('/api/superadmin/academics') ||
-    req.path.startsWith('/api/centralized-content') ||
+    checkPath === '/' ||
+    checkPath.startsWith('/uploads/') ||
+    checkPath.startsWith('/api/portfolio') ||
+    checkPath.startsWith('/api/counsellor') ||
+    checkPath.startsWith('/api/superadmin/academics') ||
+    checkPath.startsWith('/api/centralized-content') ||
     (req.method === 'GET' && (
-      req.path.startsWith('/api/exam-schedule') ||
-      req.path.startsWith('/api/digital-library') ||
-      req.path.startsWith('/api/digital-library-upload') ||
-      req.path.startsWith('/api/timetable') ||
-      req.path.startsWith('/api/students') ||
-      req.path.startsWith('/api/analytics') ||
-      req.path.startsWith('/api/notifications') ||
-      req.path.startsWith('/api/headmaster/model-exams')
+      checkPath.startsWith('/api/exam-schedule') ||
+      checkPath.startsWith('/api/digital-library') ||
+      checkPath.startsWith('/api/digital-library-upload') ||
+      checkPath.startsWith('/api/timetable') ||
+      checkPath.startsWith('/api/students') ||
+      checkPath.startsWith('/api/analytics') ||
+      checkPath.startsWith('/api/notifications') ||
+      checkPath.startsWith('/api/headmaster/model-exams')
     )) ||
-    req.path.startsWith('/api/ai/chat') ||
-    req.path === '/api/ai/chat-tutor' ||
-    req.path === '/api/ai/homework-ideas' ||
+    checkPath.startsWith('/api/ai/chat') ||
+    checkPath === '/api/ai/chat-tutor' ||
+    checkPath === '/api/ai/homework-ideas' ||
     req.method === 'OPTIONS' ||
+    PUBLIC_PATHS.includes(checkPath) ||
     PUBLIC_PATHS.includes(req.path)
   ) {
     return next();
