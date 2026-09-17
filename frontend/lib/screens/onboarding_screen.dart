@@ -6,7 +6,8 @@ import '../services/course_service.dart';
 import '../core/constants/app_constants.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  final int initialStep;
+  const OnboardingScreen({super.key, this.initialStep = 0});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -19,7 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   // Option 2: Localhost Development -> http://localhost:5000
   static String get _baseUrl => AppConstants.baseUrl;
 
-  int _currentStep = 0; // 0: Welcome, 1: Login
+  late int _currentStep; // 0: Welcome, 1: Login
   bool _rememberMe = true;
   bool _isLoading = false;
 
@@ -59,6 +60,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   void initState() {
     super.initState();
+    _currentStep = widget.initialStep;
 
     // 1. Entrance Sequence Controller (2.2 seconds total, smooth 60 FPS)
     _entranceController = AnimationController(
@@ -823,7 +825,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: () => setState(() => _currentStep = 1),
+                          onPressed: () {
+                            Provider.of<CourseService>(context, listen: false).markWelcomeSeen();
+                            setState(() => _currentStep = 1);
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF007A55),
                             foregroundColor: Colors.white,

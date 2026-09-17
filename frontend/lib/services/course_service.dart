@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/course.dart';
 import '../models/subject.dart';
 import '../models/student.dart';
@@ -15,6 +16,16 @@ class CourseService extends ChangeNotifier {
   // Option 1: Production (Vercel) -> https://tn-schools-mobile-app-backend.vercel.app
   // Option 2: Localhost Development -> http://localhost:5000
   static String get _baseUrl => AppConstants.baseUrl;
+
+  static const String _prefKeyIsLoggedIn = 'tn_student_is_logged_in';
+  static const String _prefKeyStudentData = 'tn_student_data';
+  static const String _prefKeyHasSeenWelcome = 'tn_student_has_seen_welcome';
+
+  bool _isLoggedIn = false;
+  bool _hasSeenWelcome = false;
+
+  bool get isLoggedIn => _isLoggedIn;
+  bool get hasSeenWelcome => _hasSeenWelcome;
 
   Student _student = const Student(
     id: 'f7bfdf58-6567-4f68-ab56-4cac65df54a5',
@@ -41,6 +52,68 @@ class CourseService extends ChangeNotifier {
 
   CourseService() {
     fetchClassSubjects();
+  }
+
+  Future<void> initSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isLoggedIn = prefs.getBool(_prefKeyIsLoggedIn) ?? false;
+      _hasSeenWelcome = prefs.getBool(_prefKeyHasSeenWelcome) ?? false;
+
+      final studentJsonStr = prefs.getString(_prefKeyStudentData);
+      if (_isLoggedIn && studentJsonStr != null && studentJsonStr.isNotEmpty) {
+        final Map<String, dynamic> studentMap = jsonDecode(studentJsonStr);
+        _student = Student.fromJson(studentMap);
+      }
+      notifyListeners();
+      if (_isLoggedIn) {
+        fetchClassSubjects();
+      }
+    } catch (e) {
+      debugPrint('Error initializing session from SharedPreferences: $e');
+    }
+  }
+
+  Future<void> _saveSessionToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_prefKeyIsLoggedIn, true);
+      await prefs.setBool(_prefKeyHasSeenWelcome, true);
+      await prefs.setString(_prefKeyStudentData, jsonEncode(_student.toJson()));
+    } catch (e) {
+      debugPrint('Error saving session to SharedPreferences: $e');
+    }
+  }
+
+  Future<void> markWelcomeSeen() async {
+    _hasSeenWelcome = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_prefKeyHasSeenWelcome, true);
+    } catch (e) {
+      debugPrint('Error saving hasSeenWelcome to SharedPreferences: $e');
+    }
+  }
+
+  Future<void> logout() async {
+    _isLoggedIn = false;
+    _hasSeenWelcome = true;
+    _student = const Student(
+      id: '',
+      name: 'Student',
+      avatarUrl: 'assets/images/home/Boy.png',
+      coins: 0,
+      enrolledCourseIds: [],
+    );
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_prefKeyIsLoggedIn, false);
+      await prefs.remove(_prefKeyStudentData);
+      await prefs.setBool(_prefKeyHasSeenWelcome, true);
+    } catch (e) {
+      debugPrint('Error clearing session in SharedPreferences: $e');
+    }
   }
 
   // Reading Screen State
@@ -831,8 +904,11 @@ class CourseService extends ChangeNotifier {
       group: resolvedGroup,
       stream: resolvedStream,
     );
+    _isLoggedIn = true;
+    _hasSeenWelcome = true;
     notifyListeners();
     fetchClassSubjects();
+    _saveSessionToPrefs();
   }
 
   // Subject Selection

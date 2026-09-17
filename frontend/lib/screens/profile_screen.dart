@@ -454,13 +454,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
+                    await courseService.logout();
                     courseService.setBottomNavIndex(0);
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/onboarding',
-                      (route) => false,
-                    );
+                    if (context.mounted) {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/login',
+                        (route) => false,
+                      );
+                    }
                   },
                   icon: const Icon(Icons.logout_rounded, size: 18),
                   label: Text(

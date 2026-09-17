@@ -114,4 +114,56 @@ class Student {
       token: token ?? this.token,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'rollNumber': rollNumber,
+      'phone': phone,
+      'avatarUrl': avatarUrl,
+      'coins': coins,
+      'enrolledCourseIds': enrolledCourseIds,
+      'classStandard': classStandard,
+      'section': section,
+      'gender': gender,
+      'medium': medium,
+      'stream': stream,
+      'group': group,
+      'schoolName': schoolName,
+      'xp': xp,
+      'streakDays': streakDays,
+      'attendancePercentage': attendancePercentage,
+      'academicScore': academicScore,
+      'schoolId': schoolId,
+      'studentId': studentId,
+      'token': token,
+    };
+  }
+
+  factory Student.fromJson(Map<String, dynamic> json) {
+    return Student(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? 'Student',
+      rollNumber: json['rollNumber']?.toString() ?? '',
+      phone: json['phone']?.toString() ?? '',
+      avatarUrl: json['avatarUrl']?.toString() ?? 'assets/images/home/Boy.png',
+      coins: json['coins'] is int ? json['coins'] : (int.tryParse(json['coins']?.toString() ?? '845') ?? 845),
+      enrolledCourseIds: (json['enrolledCourseIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const ['c1', 'c5', 'c7'],
+      classStandard: json['classStandard']?.toString() ?? '6th Standard',
+      section: json['section']?.toString() ?? 'A',
+      gender: json['gender']?.toString() ?? 'male',
+      medium: json['medium']?.toString() ?? 'English Medium',
+      stream: json['stream']?.toString() ?? 'General',
+      group: json['group']?.toString(),
+      schoolName: json['schoolName']?.toString() ?? 'Government Higher Secondary School',
+      xp: json['xp'] is int ? json['xp'] : (int.tryParse(json['xp']?.toString() ?? '2450') ?? 2450),
+      streakDays: json['streakDays'] is int ? json['streakDays'] : (int.tryParse(json['streakDays']?.toString() ?? '12') ?? 12),
+      attendancePercentage: json['attendancePercentage'] is int ? json['attendancePercentage'] : (int.tryParse(json['attendancePercentage']?.toString() ?? '92') ?? 92),
+      academicScore: json['academicScore'] is int ? json['academicScore'] : (int.tryParse(json['academicScore']?.toString() ?? '84') ?? 84),
+      schoolId: json['schoolId']?.toString() ?? 'd9962dbb-f572-47a4-8240-6eef99b5c5bb',
+      studentId: json['studentId']?.toString(),
+      token: json['token']?.toString(),
+    );
+  }
 }
