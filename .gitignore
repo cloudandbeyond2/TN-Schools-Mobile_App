@@ -7,7 +7,7 @@
 !.env.example
 
 # Backend uploads - don't push PDFs/files
-backend/uploads/
+# backend/uploads/
 # Ignore .env.example too
 **/.env.example
 # Flutter
