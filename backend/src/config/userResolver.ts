@@ -96,6 +96,16 @@ export async function resolveUserId(userId: string): Promise<string | null> {
     if (tempStaff) {
       return await ensureUser(tempStaff.email, tempStaff.name, 'TEACHER', tempStaff.schoolId);
     }
+
+    // 5. Check if it belongs to Student
+    const student = await prisma.student.findUnique({
+      where: { id: userId },
+      select: { userId: true }
+    });
+
+    if (student?.userId) {
+      return student.userId;
+    }
   } catch (err) {
     console.error('[resolveUserId] Error resolving userId:', err);
   }

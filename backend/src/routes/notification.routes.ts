@@ -26,11 +26,12 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     const notifications: any[] = await prisma.$queryRaw`
-      SELECT id, "userId", message, "read", "createdAt"
+      SELECT id, "userId", message, "read", "createdAt", title, type, "studentId"
       FROM "Notification"
       WHERE "userId" = ${resolvedId}
+         OR "studentId" = ${String(targetUserId)}
       ORDER BY "createdAt" DESC
-      LIMIT 20
+      LIMIT 50
     `;
 
     return res.json({ success: true, data: notifications });
@@ -114,6 +115,29 @@ router.put('/:id/read', async (req: Request, res: Response) => {
     return res.json({ success: true, data: rows[0] });
   } catch (err) {
     console.error('[PUT /api/notifications/:id/read]', err);
+    return res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// ─── PUT /api/notifications/:id/unread ───────────────────────────
+router.put('/:id/unread', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const rows: any[] = await prisma.$queryRaw`
+      UPDATE "Notification"
+      SET "read" = false
+      WHERE id = ${id}
+      RETURNING *
+    `;
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, error: 'Notification not found' });
+    }
+
+    return res.json({ success: true, data: rows[0] });
+  } catch (err) {
+    console.error('[PUT /api/notifications/:id/unread]', err);
     return res.status(500).json({ success: false, error: String(err) });
   }
 });
