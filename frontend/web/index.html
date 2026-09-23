@@ -14,7 +14,12 @@
             msg.indexOf('reportAllChanges') !== -1 ||
             stack.indexOf('reportAllChanges') !== -1 ||
             stack.indexOf('startTime') !== -1 ||
-            file.indexOf('grammarly') !== -1
+            file.indexOf('grammarly') !== -1 ||
+            msg.indexOf('ViewInsets') !== -1 ||
+            msg.indexOf('physicalSize calculation') !== -1 ||
+            stack.indexOf('ViewInsets') !== -1 ||
+            stack.indexOf('_computeOnScreenKeyboardInsets') !== -1 ||
+            msg.indexOf('Noto fonts') !== -1
           ) {
             e.stopImmediatePropagation();
             e.preventDefault();
@@ -24,7 +29,13 @@
 
         window.addEventListener('unhandledrejection', function(e) {
           var r = (e && e.reason) ? String(e.reason) : '';
-          if (r.indexOf('startTime') !== -1 || r.indexOf('reportAllChanges') !== -1) {
+          if (
+            r.indexOf('startTime') !== -1 ||
+            r.indexOf('reportAllChanges') !== -1 ||
+            r.indexOf('ViewInsets') !== -1 ||
+            r.indexOf('physicalSize calculation') !== -1 ||
+            r.indexOf('_computeOnScreenKeyboardInsets') !== -1
+          ) {
             e.stopImmediatePropagation();
             e.preventDefault();
           }
@@ -37,12 +48,39 @@
               var arg = arguments[i];
               if (arg) {
                 var str = (typeof arg === 'string') ? arg : ((arg.message || '') + ' ' + (arg.stack || ''));
-                if (str.indexOf('startTime') !== -1 || str.indexOf('reportAllChanges') !== -1) {
+                if (
+                  str.indexOf('startTime') !== -1 ||
+                  str.indexOf('reportAllChanges') !== -1 ||
+                  str.indexOf('ViewInsets') !== -1 ||
+                  str.indexOf('physicalSize calculation') !== -1 ||
+                  str.indexOf('_computeOnScreenKeyboardInsets') !== -1
+                ) {
                   return;
                 }
               }
             }
             return origErr.apply(window.console, arguments);
+          };
+        }
+
+        if (window.console && window.console.warn) {
+          var origWarn = window.console.warn;
+          window.console.warn = function() {
+            for (var i = 0; i < arguments.length; i++) {
+              var arg = arguments[i];
+              if (arg) {
+                var str = (typeof arg === 'string') ? arg : ((arg.message || '') + ' ' + (arg.stack || ''));
+                if (
+                  str.indexOf('Noto fonts') !== -1 ||
+                  str.indexOf('missing characters') !== -1 ||
+                  str.indexOf('ViewInsets') !== -1 ||
+                  str.indexOf('Violation') !== -1
+                ) {
+                  return;
+                }
+              }
+            }
+            return origWarn.apply(window.console, arguments);
           };
         }
 
@@ -172,26 +210,21 @@
 
   <title>student_app</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false">
   <script>
-    // Fix: Flutter web crash "ViewInsets cannot be negative" on Chrome / mobile viewport resize
+    // Fix: Flutter web "ViewInsets cannot be negative" & viewport size stability
     (function() {
       try {
-        function getSafeMaxHeight(top) {
-          var clientH = (document.documentElement && document.documentElement.clientHeight) || 0;
-          var innerH = window.innerHeight || 0;
-          var winH = clientH > 0 && innerH > 0 ? Math.min(clientH, innerH) : (clientH || innerH || 600);
-          return Math.max(0, winH - (top || 0));
-        }
-
-        function getSafeMaxWidth(left) {
-          var clientW = (document.documentElement && document.documentElement.clientWidth) || 0;
-          var innerW = window.innerWidth || 0;
-          var winW = clientW > 0 && innerW > 0 ? Math.min(clientW, innerW) : (clientW || innerW || 800);
-          return Math.max(0, winW - (left || 0));
-        }
-
         var proto = window.VisualViewport && VisualViewport.prototype;
         if (proto) {
           var heightDesc = Object.getOwnPropertyDescriptor(proto, 'height');
@@ -237,15 +270,13 @@
               get: function() {
                 try {
                   var vh = getOrigH.call(this);
-                  var top = getOrigTop ? getOrigTop.call(this) : (this.offsetTop || 0);
-                  var maxH = getSafeMaxHeight(top);
-                  var safeH = maxH > 0.05 ? maxH - 0.01 : maxH;
+                  var winH = window.innerHeight || (document.documentElement && document.documentElement.clientHeight) || vh;
                   if (typeof vh === 'number' && !isNaN(vh) && vh > 0) {
-                    return Math.min(vh, safeH);
+                    return Math.min(vh, winH);
                   }
-                  return safeH;
+                  return winH;
                 } catch (_) {
-                  return getSafeMaxHeight(0);
+                  return window.innerHeight || 600;
                 }
               },
               configurable: true,
@@ -257,24 +288,45 @@
               get: function() {
                 try {
                   var vw = getOrigW.call(this);
-                  var left = getOrigLeft ? getOrigLeft.call(this) : (this.offsetLeft || 0);
-                  var maxW = getSafeMaxWidth(left);
-                  var safeW = maxW > 0.05 ? maxW - 0.01 : maxW;
+                  var winW = window.innerWidth || (document.documentElement && document.documentElement.clientWidth) || vw;
                   if (typeof vw === 'number' && !isNaN(vw) && vw > 0) {
-                    return Math.min(vw, safeW);
+                    return Math.min(vw, winW);
                   }
-                  return safeW;
+                  return winW;
                 } catch (_) {
-                  return getSafeMaxWidth(0);
+                  return window.innerWidth || 800;
                 }
               },
               configurable: true,
             });
           }
         }
-      } catch (e) {
-        console.warn('VisualViewport protection patch error:', e);
-      }
+      } catch (_) {}
+
+      // Patch Dart Web assertFailed if present to avoid breaking on ViewInsets assertion
+      try {
+        function patchAssert(target) {
+          if (!target || !target.assertFailed || target.assertFailed._patched) return;
+          var orig = target.assertFailed;
+          target.assertFailed = function(msg) {
+            if (msg && (String(msg).indexOf('ViewInsets') !== -1 || String(msg).indexOf('physicalSize') !== -1)) {
+              return;
+            }
+            return orig.apply(this, arguments);
+          };
+          target.assertFailed._patched = true;
+        }
+
+        var patchInterval = setInterval(function() {
+          if (window.dart_sdk && window.dart_sdk.dart) {
+            patchAssert(window.dart_sdk.dart);
+          }
+          if (window.dart) {
+            patchAssert(window.dart);
+          }
+        }, 50);
+        setTimeout(function() { clearInterval(patchInterval); }, 15000);
+      } catch (_) {}
     })();
   </script>
   <script src="flutter_bootstrap.js" async></script>

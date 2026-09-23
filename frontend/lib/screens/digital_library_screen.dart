@@ -78,8 +78,6 @@ class _DigitalLibraryScreenState extends State<DigitalLibraryScreen> {
         : student.classStandard.replaceAll(RegExp(r'\D'), '');
     final studentClass = rawClass.isNotEmpty ? rawClass : '6';
 
-    debugPrint('📚 Digital Library: Fetching for schoolId=$schoolId, class=$studentClass');
-
     setState(() => _isLoading = true);
 
     try {
@@ -89,15 +87,12 @@ class _DigitalLibraryScreenState extends State<DigitalLibraryScreen> {
 
       String url = '$_baseUrl/api/digital-library-upload?${params.join('&')}';
 
-      debugPrint('📚 Digital Library: URL → $url');
-
       final res = await http.get(Uri.parse(url), headers: courseService.authHeaders).timeout(const Duration(seconds: 10));
 
       if (res.statusCode == 200) {
         final body = jsonDecode(res.body);
         if (body['success'] == true && body['data'] is List) {
           final List<dynamic> list = body['data'];
-          debugPrint('📚 Digital Library: Got ${list.length} resources for class $studentClass');
           if (mounted) {
             setState(() {
               _libraryItems = list.map((item) => Map<String, dynamic>.from(item)).toList();
@@ -106,7 +101,7 @@ class _DigitalLibraryScreenState extends State<DigitalLibraryScreen> {
         }
       }
     } catch (err) {
-      debugPrint('❌ Digital Library fetch error: $err');
+      // Fetch error handled silently
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

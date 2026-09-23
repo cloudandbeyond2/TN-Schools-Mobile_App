@@ -1585,23 +1585,27 @@ class _HomeworkAssignmentsScreenState extends State<HomeworkAssignmentsScreen> {
                         : const Color(0xFF64748B),
                   ),
                   const SizedBox(width: 5),
-                  Text(
-                    hw.isCompleted
-                        ? (AppLocalization.isTamil
-                            ? 'சமர்ப்பிக்கப்பட்டது'
-                            : 'Submitted')
-                        : (AppLocalization.isTamil
-                            ? 'சமர்ப்பிக்கப்படவில்லை'
-                            : 'Not submitted'),
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.bold,
-                      color: hw.isCompleted
-                          ? const Color(0xFF10B981)
-                          : const Color(0xFF64748B),
+                  Flexible(
+                    child: Text(
+                      hw.isCompleted
+                          ? (AppLocalization.isTamil
+                              ? 'சமர்ப்பிக்கப்பட்டது'
+                              : 'Submitted')
+                          : (AppLocalization.isTamil
+                              ? 'சமர்ப்பிக்கப்படவில்லை'
+                              : 'Not submitted'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        color: hw.isCompleted
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFF64748B),
+                      ),
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   Text(
                     'Due: ${hw.dueDate}',
                     style: const TextStyle(
@@ -1904,13 +1908,17 @@ class _HomeworkAssignmentsScreenState extends State<HomeworkAssignmentsScreen> {
               Expanded(
                 child: Row(
                   children: [
-                    Text(
-                      hw.subject,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: subjectColor,
-                        fontFamily: 'Outfit',
+                    Flexible(
+                      child: Text(
+                        hw.subject,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: subjectColor,
+                          fontFamily: 'Outfit',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1992,43 +2000,50 @@ class _HomeworkAssignmentsScreenState extends State<HomeworkAssignmentsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Left: Status with icon
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    hw.isCompleted
-                        ? Icons.check_circle_rounded
-                        : Icons.history_rounded,
-                    size: 17,
-                    color: hw.isCompleted
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFF64748B),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    hw.status == 'graded'
-                        ? 'Graded (${hw.score ?? 'A'})'
-                        : (hw.isCompleted
-                            ? (AppLocalization.isTamil
-                                ? 'சமர்ப்பிக்கப்பட்டது'
-                                : 'Submitted')
-                            : (hw.status == 'late_submission'
-                                ? (AppLocalization.isTamil
-                                    ? 'தாமதமாக சமர்ப்பிக்கப்பட்டது'
-                                    : 'Late Submission')
-                                : (AppLocalization.isTamil
-                                    ? 'சமர்ப்பிக்கப்படவில்லை'
-                                    : 'Not submitted'))),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      hw.isCompleted
+                          ? Icons.check_circle_rounded
+                          : Icons.history_rounded,
+                      size: 17,
                       color: hw.isCompleted
                           ? const Color(0xFF10B981)
                           : const Color(0xFF64748B),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 5),
+                    Flexible(
+                      child: Text(
+                        hw.status == 'graded'
+                            ? 'Graded (${hw.score ?? 'A'})'
+                            : (hw.isCompleted
+                                ? (AppLocalization.isTamil
+                                    ? 'சமர்ப்பிக்கப்பட்டது'
+                                    : 'Submitted')
+                                : (hw.status == 'late_submission'
+                                    ? (AppLocalization.isTamil
+                                        ? 'தாமதமாக சமர்ப்பிக்கப்பட்டது'
+                                        : 'Late Submission')
+                                    : (AppLocalization.isTamil
+                                        ? 'சமர்ப்பிக்கப்படவில்லை'
+                                        : 'Not submitted'))),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: hw.isCompleted
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
 
               // Right: Due Date
               Text(
@@ -2044,84 +2059,91 @@ class _HomeworkAssignmentsScreenState extends State<HomeworkAssignmentsScreen> {
 
           const SizedBox(height: 14),
 
-          // Row 5: Action Buttons (View Details & Submit Homework)
-          Row(
+          // Row 5: Action Buttons (View Details, AI Ideas & Submit Homework)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              // View Details Button (Outlined white container)
-              GestureDetector(
-                onTap: () =>
-                    _showViewDetailsDialog(context, hw, courseService),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: const Color(0xFFE2E8F0),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Text(
-                    AppLocalization.isTamil
-                        ? 'விவரங்களைக் காண்க'
-                        : 'View Details',
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                      fontFamily: 'Outfit',
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // AI Ideas Quick Hint Button
-              GestureDetector(
-                onTap: () => _handleAskAiIdeas(hw),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: const Color(0xFFC7D2FE),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.auto_awesome_rounded,
-                        size: 14,
-                        color: Color(0xFF4F46E5),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  // View Details Button (Outlined white container)
+                  GestureDetector(
+                    onTap: () =>
+                        _showViewDetailsDialog(context, hw, courseService),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 7.5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFFE2E8F0),
+                          width: 1.2,
+                        ),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        AppLocalization.isTamil ? 'AI உதவி' : 'AI Ideas',
+                      child: Text(
+                        AppLocalization.isTamil
+                            ? 'விவரங்களைக் காண்க'
+                            : 'View Details',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF4338CA),
+                          color: Color(0xFF0F172A),
+                          fontFamily: 'Outfit',
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              const Spacer(),
+                  // AI Ideas Quick Hint Button
+                  GestureDetector(
+                    onTap: () => _handleAskAiIdeas(hw),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 7.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFFC7D2FE),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 14,
+                            color: Color(0xFF4F46E5),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            AppLocalization.isTamil ? 'AI உதவி' : 'AI Ideas',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF4338CA),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
               // Submit Homework / Resubmit Button (Solid Emerald)
               GestureDetector(
                 onTap: () =>
                     _showSubmitHomeworkDialog(context, hw, courseService),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 13, vertical: 8),
                   decoration: BoxDecoration(
                     color: const Color(0xFF00B074),
                     borderRadius: BorderRadius.circular(10),
@@ -2142,7 +2164,7 @@ class _HomeworkAssignmentsScreenState extends State<HomeworkAssignmentsScreen> {
                             ? 'வீட்டுப்பாடம் சமர்ப்பி'
                             : 'Submit Homework'),
                     style: const TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontFamily: 'Outfit',
