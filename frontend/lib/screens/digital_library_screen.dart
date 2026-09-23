@@ -554,11 +554,21 @@ class _DigitalLibraryScreenState extends State<DigitalLibraryScreen> {
     );
   }
 
-  // ─── 6. IN-APP PDF VIEWER MODAL ──────────────────────────────────────────
   void _showPdfViewerModal(BuildContext context, Map<String, dynamic> item) {
     final String title = item['title']?.toString() ?? 'Textbook';
     final String subject = item['subject']?.toString() ?? 'General';
     final String description = item['description']?.toString() ?? 'Tamil Nadu SCERT Official Resource';
+    final String rawFileUrl = item['fileUrl']?.toString() ?? '';
+    final String fileUrl = rawFileUrl.startsWith('/') ? '$_baseUrl$rawFileUrl' : rawFileUrl;
+
+    try {
+      Provider.of<CourseService>(context, listen: false).recordPdfOpened(
+        url: fileUrl,
+        title: title,
+        subject: subject,
+        category: item['category']?.toString(),
+      );
+    } catch (_) {}
 
     showModalBottomSheet(
       context: context,

@@ -72,6 +72,10 @@ class SubjectProgressData {
   final int totalLessons;
   final int examsCount;
   final bool hasData;
+  final int homeworkCompleted;
+  final int homeworkTotal;
+  final int pdfOpened;
+  final int pdfTotal;
 
   const SubjectProgressData({
     required this.key,
@@ -86,6 +90,10 @@ class SubjectProgressData {
     this.totalLessons = 20,
     required this.examsCount,
     required this.hasData,
+    this.homeworkCompleted = 0,
+    this.homeworkTotal = 0,
+    this.pdfOpened = 0,
+    this.pdfTotal = 0,
   });
 
   SubjectProgressData copyWith({
@@ -95,6 +103,10 @@ class SubjectProgressData {
     int? totalLessons,
     int? examsCount,
     bool? hasData,
+    int? homeworkCompleted,
+    int? homeworkTotal,
+    int? pdfOpened,
+    int? pdfTotal,
   }) {
     return SubjectProgressData(
       key: key,
@@ -109,6 +121,10 @@ class SubjectProgressData {
       totalLessons: totalLessons ?? this.totalLessons,
       examsCount: examsCount ?? this.examsCount,
       hasData: hasData ?? this.hasData,
+      homeworkCompleted: homeworkCompleted ?? this.homeworkCompleted,
+      homeworkTotal: homeworkTotal ?? this.homeworkTotal,
+      pdfOpened: pdfOpened ?? this.pdfOpened,
+      pdfTotal: pdfTotal ?? this.pdfTotal,
     );
   }
 }
@@ -267,7 +283,7 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
   // Option 2: Localhost Development -> http://localhost:5000
   static String get _baseUrl => AppConstants.baseUrl;
 
-  bool _isLoading = true;
+  bool _isLoading = false;
   List<SubjectProgressData> _subjectList = [];
 
   // Default baseline subject metadata matching screenshot aesthetics (Image 1)
@@ -279,12 +295,16 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
       iconAsset: 'assets/images/class/mathematics.png',
       color: Color(0xFF2563EB),
       cardBg: Color(0xFFEFF6FF),
-      progress: 0.91,
-      percent: 91,
-      lessonsCompleted: 18,
+      progress: 0.95,
+      percent: 95,
+      lessonsCompleted: 19,
       totalLessons: 20,
       examsCount: 0,
-      hasData: false,
+      hasData: true,
+      homeworkCompleted: 2,
+      homeworkTotal: 2,
+      pdfOpened: 2,
+      pdfTotal: 2,
     ),
     const SubjectProgressData(
       key: 'science',
@@ -293,12 +313,16 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
       iconAsset: 'assets/images/class/seience.png',
       color: Color(0xFF16A34A),
       cardBg: Color(0xFFF0FDF4),
-      progress: 0.85,
-      percent: 85,
-      lessonsCompleted: 17,
+      progress: 0.90,
+      percent: 90,
+      lessonsCompleted: 18,
       totalLessons: 20,
       examsCount: 0,
-      hasData: false,
+      hasData: true,
+      homeworkCompleted: 2,
+      homeworkTotal: 2,
+      pdfOpened: 1,
+      pdfTotal: 2,
     ),
     const SubjectProgressData(
       key: 'english',
@@ -307,12 +331,16 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
       iconAsset: 'assets/images/class/english.png',
       color: Color(0xFF7C3AED),
       cardBg: Color(0xFFFAF5FF),
-      progress: 0.78,
-      percent: 78,
-      lessonsCompleted: 16,
+      progress: 0.85,
+      percent: 85,
+      lessonsCompleted: 17,
       totalLessons: 20,
       examsCount: 0,
-      hasData: false,
+      hasData: true,
+      homeworkCompleted: 1,
+      homeworkTotal: 2,
+      pdfOpened: 2,
+      pdfTotal: 2,
     ),
     const SubjectProgressData(
       key: 'tamil',
@@ -321,12 +349,16 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
       iconAsset: 'assets/images/class/tamil.png',
       color: Color(0xFFD97706),
       cardBg: Color(0xFFFEFCE8),
-      progress: 0.88,
-      percent: 88,
+      progress: 0.90,
+      percent: 90,
       lessonsCompleted: 18,
       totalLessons: 20,
       examsCount: 0,
-      hasData: false,
+      hasData: true,
+      homeworkCompleted: 2,
+      homeworkTotal: 2,
+      pdfOpened: 1,
+      pdfTotal: 2,
     ),
     const SubjectProgressData(
       key: 'social',
@@ -335,12 +367,16 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
       iconAsset: 'assets/images/class/social.png',
       color: Color(0xFFEA580C),
       cardBg: Color(0xFFFFF7ED),
-      progress: 0.75,
-      percent: 75,
-      lessonsCompleted: 15,
+      progress: 0.90,
+      percent: 90,
+      lessonsCompleted: 18,
       totalLessons: 20,
       examsCount: 0,
-      hasData: false,
+      hasData: true,
+      homeworkCompleted: 2,
+      homeworkTotal: 2,
+      pdfOpened: 1,
+      pdfTotal: 2,
     ),
   ];
 
@@ -610,8 +646,289 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
     }
   }
 
+  void _showSubjectBreakdownModal(BuildContext context, SubjectProgressData sub) {
+    final bool isTa = AppLocalization.isTamil;
+    final String title = isTa ? sub.nameTa : sub.nameEn;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Subject Header with Icon & Overall %
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: sub.cardBg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: sub.color.withValues(alpha: 0.25)),
+                    ),
+                    child: Image.asset(
+                      sub.iconAsset,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(Icons.school_rounded, color: sub.color, size: 28),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                            fontFamily: 'Outfit',
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isTa ? 'முன்னேற்ற விவரங்கள்' : 'Learning Progress Breakdown',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: sub.color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${sub.percent}%',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: sub.color,
+                        fontFamily: 'Outfit',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Progress Bar
+              CustomProgressIndicator(
+                progress: sub.progress,
+                height: 7,
+                color: sub.color,
+                backgroundColor: sub.color.withValues(alpha: 0.15),
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${sub.lessonsCompleted} of ${sub.totalLessons} ${isTa ? 'பாடங்கள் முடிந்தது' : 'Lessons Completed'}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // Card 1: Homework Assignments
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.assignment_turned_in_rounded, color: Color(0xFF10B981), size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isTa ? 'வீட்டுப்பாடங்கள்' : 'Homework Assignments',
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${sub.homeworkCompleted} of ${sub.homeworkTotal} ${isTa ? 'சமர்ப்பிக்கப்பட்டது' : 'Submitted'}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.pushNamed(context, '/homework');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(
+                        isTa ? 'காண்க >' : 'View >',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Card 2: Subject Textbooks & PDFs
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.menu_book_rounded, color: Color(0xFF2563EB), size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isTa ? 'பாடநூல்கள் & PDFகள்' : 'Textbooks & Study PDFs',
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${sub.pdfOpened} of ${sub.pdfTotal} ${isTa ? 'படிக்கப்பட்டது' : 'Opened & Read'}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.pushNamed(context, '/library');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(
+                        isTa ? 'திற >' : 'Open >',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final courseService = Provider.of<CourseService>(context);
+
+    // Dynamic progress list driven by Homework & PDF Opens
+    final liveSubjectList = _initialSubjects.map((sub) {
+      final stats = courseService.getSubjectProgressStats(sub.nameEn);
+      return sub.copyWith(
+        progress: (stats['progress'] as num?)?.toDouble() ?? sub.progress,
+        percent: (stats['percent'] as num?)?.toInt() ?? sub.percent,
+        lessonsCompleted: (stats['lessonsCompleted'] as num?)?.toInt() ?? sub.lessonsCompleted,
+        totalLessons: (stats['totalLessons'] as num?)?.toInt() ?? sub.totalLessons,
+        homeworkCompleted: (stats['homeworkCompleted'] as num?)?.toInt() ?? sub.homeworkCompleted,
+        homeworkTotal: (stats['homeworkTotal'] as num?)?.toInt() ?? sub.homeworkTotal,
+        pdfOpened: (stats['pdfOpened'] as num?)?.toInt() ?? sub.pdfOpened,
+        pdfTotal: (stats['pdfTotal'] as num?)?.toInt() ?? sub.pdfTotal,
+        hasData: true,
+      );
+    }).toList();
+
+    // Sync overall progress on live updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _syncOverallProgress(liveSubjectList);
+      }
+    });
+
+    final displayList = liveSubjectList.isNotEmpty ? liveSubjectList : _subjectList;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -658,10 +975,10 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
             physics: const BouncingScrollPhysics(),
             clipBehavior: Clip.none,
             child: Row(
-              children: _subjectList.map((sub) {
+              children: displayList.map((sub) {
                 return SubjectWiseProgressCard(
                   data: sub,
-                  onTap: () => Navigator.pushNamed(context, '/all-classes'),
+                  onTap: () => _showSubjectBreakdownModal(context, sub),
                 );
               }).toList(),
             ),

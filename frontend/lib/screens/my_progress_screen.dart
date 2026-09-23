@@ -43,13 +43,17 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
     super.dispose();
   }
 
-  // Fetch real students list based on logged-in student's class and school
   Future<void> _loadStudents() async {
     if (!mounted) return;
     final courseService = Provider.of<CourseService>(context, listen: false);
     final student = courseService.student;
     final studentClass = student.grade.isNotEmpty ? student.grade : '6';
     final studentSection = student.section.isNotEmpty ? student.section.toUpperCase() : 'A';
+
+    // Also refresh homework & library progress in parallel
+    courseService.fetchHomework();
+    courseService.fetchDigitalLibraryResources();
+    courseService.loadLibraryProgress();
 
     setState(() {
       _isLoadingStudents = true;

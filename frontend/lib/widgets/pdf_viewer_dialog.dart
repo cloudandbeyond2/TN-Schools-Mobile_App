@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/course_service.dart';
 import 'pdf_viewer_platform_stub.dart'
     if (dart.library.html) 'pdf_viewer_platform_web.dart';
 
@@ -48,6 +50,21 @@ class _PdfViewerDialogState extends State<PdfViewerDialog> {
     super.initState();
     // Unique ID for the platform view registry
     _viewId = 'pdf-viewer-${DateTime.now().millisecondsSinceEpoch}-${widget.url.hashCode}';
+
+    // Record PDF open in CourseService to update progress
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        try {
+          final cs = Provider.of<CourseService>(context, listen: false);
+          cs.recordPdfOpened(
+            url: widget.url,
+            title: widget.title,
+            subject: widget.subject,
+            category: widget.category,
+          );
+        } catch (_) {}
+      }
+    });
   }
 
   Future<void> _openExternal() async {
