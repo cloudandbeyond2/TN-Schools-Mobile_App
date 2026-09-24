@@ -1248,6 +1248,7 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
           ),
           child: TextField(
             controller: _searchController,
+            textAlignVertical: TextAlignVertical.center,
             onChanged: (val) {
               setState(() {
                 _searchQuery = val;
@@ -1259,6 +1260,7 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
               fontFamily: 'Outfit',
             ),
             decoration: InputDecoration(
+              isDense: true,
               hintText: 'Search student by name or roll no...',
               hintStyle: const TextStyle(
                 fontSize: 12.5,
@@ -1266,9 +1268,12 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
                 fontFamily: 'Outfit',
               ),
               prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 18),
+              prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 42),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF94A3B8)),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 38, minHeight: 42),
                       onPressed: () {
                         _searchController.clear();
                         setState(() {
@@ -1278,7 +1283,7 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
                     )
                   : null,
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              contentPadding: EdgeInsets.zero,
             ),
           ),
         ),

@@ -1430,6 +1430,7 @@ class _AllClassesScreenState extends State<AllClassesScreen> {
                 ),
                 child: TextField(
                   controller: _searchController,
+                  textAlignVertical: TextAlignVertical.center,
                   onChanged: (val) {
                     setState(() => _searchQuery = val);
                   },
@@ -1439,6 +1440,7 @@ class _AllClassesScreenState extends State<AllClassesScreen> {
                     fontFamily: 'Outfit',
                   ),
                   decoration: InputDecoration(
+                    isDense: true,
                     hintText: 'Search $_activeTab...',
                     hintStyle: const TextStyle(
                       fontSize: 12.5,
@@ -1449,10 +1451,13 @@ class _AllClassesScreenState extends State<AllClassesScreen> {
                       size: 19,
                       color: Color(0xFF94A3B8),
                     ),
+                    prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.close_rounded,
                                 size: 16, color: Color(0xFF94A3B8)),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
