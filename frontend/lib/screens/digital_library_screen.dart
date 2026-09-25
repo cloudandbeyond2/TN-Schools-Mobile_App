@@ -132,6 +132,19 @@ class _DigitalLibraryScreenState extends State<DigitalLibraryScreen> {
     final String title = item['title']?.toString() ?? 'Study Material';
     final String? subject = item['subject']?.toString();
     final String? type = item['type']?.toString();
+    final String? category = item['category']?.toString();
+
+    // Record learning activity in CourseService
+    try {
+      final courseService = Provider.of<CourseService>(context, listen: false);
+      courseService.recordLearningActivity(
+        subject: subject ?? 'General',
+        resourceIdOrUrl: fileUrl,
+        title: title,
+        category: category ?? 'materials',
+        type: type ?? 'pdf',
+      );
+    } catch (_) {}
 
     // 1. If it is a video, open in in-app video popup on same screen
     final isVideo = (item['category']?.toString().toLowerCase() == 'videos') ||
@@ -203,6 +216,18 @@ class _DigitalLibraryScreenState extends State<DigitalLibraryScreen> {
         ? rawFileUrl.split('/').last
         : '${title.replaceAll(' ', '_')}.${isVideo ? 'mp4' : 'pdf'}';
     final String fileSize = item['size']?.toString() ?? (isVideo ? 'HD Video' : '10.0 MB');
+
+    // Record activity on download
+    try {
+      final courseService = Provider.of<CourseService>(context, listen: false);
+      courseService.recordLearningActivity(
+        subject: item['subject']?.toString() ?? 'General',
+        resourceIdOrUrl: fileUrl.isNotEmpty ? fileUrl : id,
+        title: title,
+        category: item['category']?.toString() ?? 'materials',
+        type: type,
+      );
+    } catch (_) {}
 
     if (_downloadedItemIds.contains(id)) {
       if (!isVideo) {

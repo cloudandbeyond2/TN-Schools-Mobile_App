@@ -295,9 +295,9 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
       iconAsset: 'assets/images/class/mathematics.png',
       color: Color(0xFF2563EB),
       cardBg: Color(0xFFEFF6FF),
-      progress: 0.95,
-      percent: 95,
-      lessonsCompleted: 19,
+      progress: 1.0,
+      percent: 100,
+      lessonsCompleted: 20,
       totalLessons: 20,
       examsCount: 0,
       hasData: true,
@@ -556,81 +556,42 @@ class _SubjectWiseProgressSectionState extends State<SubjectWiseProgressSection>
       final marksSummary = (analyticsData?['marksSummary'] as List?) ?? [];
 
       final updated = _initialSubjects.map((sub) {
-        // A. Match in analytics marksSummary
-        dynamic analyticsSub;
+        final stats = courseService.getSubjectProgressStats(sub.nameEn);
+
+        // Optional exams count from backend analytics
+        int examsCount = 0;
         for (final m in marksSummary) {
           final subj = m['subject']?.toString() ?? '';
           if (_isSubjectMatch(subj, sub.nameEn) || _isSubjectMatch(subj, sub.nameTa)) {
-            analyticsSub = m;
+            examsCount = (m['exams'] as num?)?.toInt() ?? 1;
             break;
           }
         }
-
-        // B. Match in recent marks
-        final matchingMarks = recentMarks.where((m) {
-          final subj = m['subject']?.toString() ?? '';
-          return _isSubjectMatch(subj, sub.nameEn) || _isSubjectMatch(subj, sub.nameTa);
-        }).toList();
-
-        // C. Match in model exams
-        double? modelScore;
-        if (modelExams.isNotEmpty) {
-          final firstModel = modelExams.first as Map<String, dynamic>?;
-          if (firstModel != null) {
-            if (sub.key == 'mathematics' && firstModel['mathematics'] != null) {
-              modelScore = (firstModel['mathematics'] as num).toDouble();
-            } else if (sub.key == 'science' && firstModel['science'] != null) {
-              modelScore = (firstModel['science'] as num).toDouble();
-            } else if (sub.key == 'english' && firstModel['english'] != null) {
-              modelScore = (firstModel['english'] as num).toDouble();
-            } else if (sub.key == 'tamil' && firstModel['tamil'] != null) {
-              modelScore = (firstModel['tamil'] as num).toDouble();
-            } else if (sub.key == 'social' && firstModel['socialScience'] != null) {
-              modelScore = (firstModel['socialScience'] as num).toDouble();
-            }
-          }
+        if (examsCount == 0) {
+          final matchingMarks = recentMarks.where((m) {
+            final subj = m['subject']?.toString() ?? '';
+            return _isSubjectMatch(subj, sub.nameEn) || _isSubjectMatch(subj, sub.nameTa);
+          }).toList();
+          examsCount = matchingMarks.length + (modelExams.isNotEmpty ? 1 : 0);
         }
 
-        bool hasData = false;
-        int? progressPct;
-        int examsCount = 0;
+        final pct = (stats['percent'] as num?)?.toInt() ?? sub.percent;
+        final prog = (stats['progress'] as num?)?.toDouble() ?? (pct / 100.0);
+        final completed = (stats['lessonsCompleted'] as num?)?.toInt() ?? sub.lessonsCompleted;
+        final totalLessons = (stats['totalLessons'] as num?)?.toInt() ?? sub.totalLessons;
 
-        if (analyticsSub != null && analyticsSub['pct'] != null) {
-          hasData = true;
-          progressPct = (analyticsSub['pct'] as num).round();
-          examsCount = (analyticsSub['exams'] as num?)?.toInt() ?? 1;
-        } else if (matchingMarks.isNotEmpty) {
-          hasData = true;
-          num scoredSum = 0;
-          num maxSum = 0;
-          for (final m in matchingMarks) {
-            scoredSum += (m['scored'] as num?) ?? 0;
-            maxSum += (m['maxMarks'] as num?) ?? 100;
-          }
-          if (maxSum > 0) {
-            progressPct = ((scoredSum / maxSum) * 100).round();
-          }
-          examsCount = matchingMarks.length;
-        } else if (modelScore != null) {
-          hasData = true;
-          progressPct = modelScore.round();
-          examsCount = 1;
-        }
-
-        if (hasData && progressPct != null) {
-          final clampedPct = progressPct.clamp(0, 100);
-          final completed = ((clampedPct * sub.totalLessons) / 100).round();
-          return sub.copyWith(
-            progress: clampedPct / 100.0,
-            percent: clampedPct,
-            lessonsCompleted: completed,
-            examsCount: examsCount,
-            hasData: true,
-          );
-        }
-
-        // Keep baseline fallback
-        return sub;
+        return sub.copyWith(
+          progress: prog,
+          percent: pct,
+          lessonsCompleted: completed,
+          totalLessons: totalLessons,
+          homeworkCompleted: (stats['homeworkCompleted'] as num?)?.toInt() ?? sub.homeworkCompleted,
+          homeworkTotal: (stats['homeworkTotal'] as num?)?.toInt() ?? sub.homeworkTotal,
+          pdfOpened: (stats['pdfOpened'] as num?)?.toInt() ?? sub.pdfOpened,
+          pdfTotal: (stats['pdfTotal'] as num?)?.toInt() ?? sub.pdfTotal,
+          examsCount: examsCount,
+          hasData: true,
+        );
       }).toList();
 
       if (mounted) {

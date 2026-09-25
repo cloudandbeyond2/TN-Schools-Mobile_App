@@ -269,6 +269,18 @@ class _AllClassesScreenState extends State<AllClassesScreen> {
 
     final fullUrl = rawUrl.startsWith('http') ? rawUrl : '$_baseUrl$rawUrl';
 
+    // Record learning activity across all categories (textbooks, notes, materials, videos)
+    try {
+      final courseService = Provider.of<CourseService>(context, listen: false);
+      courseService.recordLearningActivity(
+        subject: resource.subject,
+        resourceIdOrUrl: fullUrl,
+        title: resource.title,
+        category: resource.category,
+        type: resource.type,
+      );
+    } catch (_) {}
+
     // 1. If it is a Video Lesson: open in in-app video popup modal on same screen!
     final isVideo = resource.category == 'videos' ||
         resource.type.toLowerCase() == 'video' ||

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/course_service.dart';
 import 'pdf_viewer_platform_stub.dart'
     if (dart.library.html) 'pdf_viewer_platform_web.dart';
 
@@ -44,6 +46,20 @@ class _VideoViewerDialogState extends State<VideoViewerDialog> {
     super.initState();
     _viewId =
         'video-viewer-${DateTime.now().millisecondsSinceEpoch}-${widget.url.hashCode}';
+
+    // Record video lesson view in CourseService
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        try {
+          final cs = Provider.of<CourseService>(context, listen: false);
+          cs.recordVideoWatched(
+            url: widget.url,
+            title: widget.title,
+            subject: widget.subject,
+          );
+        } catch (_) {}
+      }
+    });
   }
 
   Future<void> _openExternal() async {

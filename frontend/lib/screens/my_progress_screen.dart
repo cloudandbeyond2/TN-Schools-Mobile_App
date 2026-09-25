@@ -8,6 +8,7 @@ import '../widgets/bottom_nav_bar.dart';
 import '../widgets/animated_counter.dart';
 import '../widgets/progress_indicator.dart';
 import '../core/constants/app_constants.dart';
+import '../core/localization/app_localization.dart';
 
 class MyProgressScreen extends StatefulWidget {
   const MyProgressScreen({super.key});
@@ -441,7 +442,7 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Top Hero Card (Full Background: assets/images/class/progress.png)
-              _buildHeroGreetingCard(student),
+              _buildHeroGreetingCard(student, courseService),
               const SizedBox(height: 20),
 
               // 2. Overall Progress Card (Full Background: assets/images/class/progress2.png)
@@ -506,8 +507,12 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
   }
 
   // --- 1. HERO GREETING CARD (Full progress.png Image) ---
-  Widget _buildHeroGreetingCard(Student student) {
+  Widget _buildHeroGreetingCard(Student student, CourseService courseService) {
     final name = student.name.isNotEmpty ? student.name : 'Student';
+    final int totalSubjects = courseService.subjectTotalCount;
+    final int inProgress = courseService.subjectInProgressCount;
+    final int completed = courseService.subjectCompletedCount;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final cardWidth = constraints.maxWidth;
@@ -576,7 +581,7 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
                         ],
                       ),
 
-                      // 3 KPI Pills Row
+                      // 3 KPI Pills Row (Subject-based: Total, In Progress, Completed)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                         decoration: BoxDecoration(
@@ -597,8 +602,9 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
                                 icon: Icons.menu_book_rounded,
                                 iconColor: Colors.white,
                                 iconBg: const Color(0xFF2563EB),
-                                count: 12,
-                                label: 'Courses\nEnrolled',
+                                count: totalSubjects,
+                                label: AppLocalization.isTamil ? 'மொத்த\nபாடங்கள்' : 'Total\nSubjects',
+                                onTap: () => _showSubjectFilterSheet(context, courseService, 'all'),
                               ),
                             ),
                             _buildMiniDivider(),
@@ -607,8 +613,9 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
                                 icon: Icons.track_changes_rounded,
                                 iconColor: Colors.white,
                                 iconBg: const Color(0xFF16A34A),
-                                count: 8,
-                                label: 'In Progress',
+                                count: inProgress,
+                                label: AppLocalization.isTamil ? 'முன்னேற்றம்' : 'In Progress',
+                                onTap: () => _showSubjectFilterSheet(context, courseService, 'in_progress'),
                               ),
                             ),
                             _buildMiniDivider(),
@@ -617,8 +624,9 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
                                 icon: Icons.emoji_events_rounded,
                                 iconColor: Colors.white,
                                 iconBg: const Color(0xFF9333EA),
-                                count: 5,
-                                label: 'Completed',
+                                count: completed,
+                                label: AppLocalization.isTamil ? 'முடிந்தது' : 'Completed',
+                                onTap: () => _showSubjectFilterSheet(context, courseService, 'completed'),
                               ),
                             ),
                           ],
@@ -641,47 +649,253 @@ class _MyProgressScreenState extends State<MyProgressScreen> {
     required Color iconBg,
     required int count,
     required String label,
+    VoidCallback? onTap,
   }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: iconBg,
-            shape: BoxShape.circle,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: iconBg,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 11.5),
           ),
-          child: Icon(icon, color: iconColor, size: 11.5),
-        ),
-        const SizedBox(width: 3.5),
-        Flexible(
+          const SizedBox(width: 3.5),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedCountText(
+                  value: count,
+                  duration: const Duration(milliseconds: 1400),
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    fontFamily: 'Outfit',
+                  ),
+                ),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 7.5,
+                    color: Color(0xFF64748B),
+                    height: 1.1,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSubjectFilterSheet(BuildContext context, CourseService courseService, String filterType) {
+    final bool isTa = AppLocalization.isTamil;
+    final List<String> subjects = [
+      'Mathematics',
+      'Science',
+      'English',
+      'Tamil',
+      'Social Studies',
+    ];
+
+    final filtered = subjects.where((subName) {
+      final stats = courseService.getSubjectProgressStats(subName);
+      final int pct = (stats['percent'] as num?)?.toInt() ?? 0;
+      if (filterType == 'completed') {
+        return pct >= 100;
+      } else if (filterType == 'in_progress') {
+        return pct > 0 && pct < 100;
+      }
+      return true;
+    }).toList();
+
+    String title;
+    if (filterType == 'completed') {
+      title = isTa ? 'முடிந்த பாடங்கள் (100%)' : 'Completed Subjects (100%)';
+    } else if (filterType == 'in_progress') {
+      title = isTa ? 'முன்னேற்றத்தில் உள்ள பாடங்கள்' : 'In Progress Subjects';
+    } else {
+      title = isTa ? 'மொத்த பாடங்கள்' : 'All Enrolled Subjects';
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AnimatedCountText(
-                value: count,
-                duration: const Duration(milliseconds: 1400),
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
-                  fontFamily: 'Outfit',
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 7.5,
-                  color: Color(0xFF64748B),
-                  height: 1.1,
-                  fontWeight: FontWeight.w600,
-                ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                      fontFamily: 'Outfit',
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${filtered.length} ${isTa ? 'பாடங்கள்' : 'Subjects'}',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0284C7),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 16),
+              if (filtered.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: Text(
+                      isTa ? 'பாடங்கள் எதுவும் இல்லை' : 'No subjects in this category',
+                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                    ),
+                  ),
+                )
+              else
+                ...filtered.map((subName) {
+                  final stats = courseService.getSubjectProgressStats(subName);
+                  final int pct = (stats['percent'] as num?)?.toInt() ?? 0;
+                  final double prog = (stats['progress'] as num?)?.toDouble() ?? (pct / 100.0);
+                  final int doneLessons = stats['lessonsCompleted'] as int? ?? 18;
+                  final int totalLessons = stats['totalLessons'] as int? ?? 20;
+
+                  Color color = const Color(0xFF0284C7);
+                  IconData icon = Icons.school_rounded;
+                  if (subName.contains('Math')) {
+                    color = const Color(0xFF2563EB);
+                    icon = Icons.calculate_rounded;
+                  } else if (subName.contains('Science')) {
+                    color = const Color(0xFF16A34A);
+                    icon = Icons.science_rounded;
+                  } else if (subName.contains('English')) {
+                    color = const Color(0xFF7C3AED);
+                    icon = Icons.record_voice_over_rounded;
+                  } else if (subName.contains('Tamil')) {
+                    color = const Color(0xFFD97706);
+                    icon = Icons.menu_book_rounded;
+                  } else if (subName.contains('Social')) {
+                    color = const Color(0xFFEA580C);
+                    icon = Icons.public_rounded;
+                  }
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(icon, color: color, size: 16),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    subName,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1E293B),
+                                      fontFamily: 'Outfit',
+                                    ),
+                                  ),
+                                  Text(
+                                    '$doneLessons of $totalLessons ${isTa ? 'பாடங்கள் முடிந்தது' : 'Lessons Completed'}',
+                                    style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: pct >= 100
+                                    ? const Color(0xFFDCFCE7)
+                                    : color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                pct >= 100 ? (isTa ? 'முடிந்தது 🎉' : '100% Completed 🎉') : '$pct%',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: pct >= 100 ? const Color(0xFF16A34A) : color,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        AnimatedLinearProgress(
+                          value: prog,
+                          minHeight: 5,
+                          color: pct >= 100 ? const Color(0xFF16A34A) : color,
+                          backgroundColor: color.withValues(alpha: 0.15),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 

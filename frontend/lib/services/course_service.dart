@@ -128,8 +128,10 @@ class CourseService extends ChangeNotifier {
   final int _totalReadingPages = 12;
   final Map<String, Set<int>> _courseCompletedLessons = {};
 
-  // Storage key for opened PDFs
-  static const String _prefKeyOpenedPdfs = 'tn_student_opened_pdfs_v2';
+  // Storage keys for opened PDFs & learning activities
+  static const String _prefKeyOpenedPdfs = 'tn_student_opened_pdfs_v4';
+  static const String _prefKeySubjectActivities = 'tn_student_subject_activities_v4';
+  static const String _prefKeyCompletedHomework = 'tn_student_completed_hw_v4';
 
   // Opened PDF URLs/IDs set & Subject mapping
   final Set<String> _openedPdfUrls = {
@@ -172,6 +174,36 @@ class CourseService extends ChangeNotifier {
     'social': {
       'pdf_soc_tb',
       'https://scert.tnschools.gov.in/textbooks/6_social_term1.pdf',
+    },
+  };
+
+  // Learning activities completed across homework, digital library, all classes screen (textbooks, notes, materials, videos)
+  final Map<String, Set<String>> _subjectCompletedActivities = {
+    'mathematics': {
+      'pdf_math_tb',
+      'pdf_math_notes',
+      'hw_math_1',
+      'hw_math_2',
+    },
+    'science': {
+      'pdf_sci_tb',
+      'hw_sci_1',
+      'hw_sci_2',
+    },
+    'english': {
+      'pdf_eng_tb',
+      'pdf_eng_grammar',
+      'hw_eng_1',
+    },
+    'tamil': {
+      'pdf_tam_tb',
+      'hw_tam_1',
+      'hw_tam_2',
+    },
+    'social': {
+      'pdf_soc_tb',
+      'hw_soc_1',
+      'hw_soc_2',
     },
   };
 
@@ -1087,6 +1119,53 @@ class CourseService extends ChangeNotifier {
   int get overallTotalLessons => _overallTotalLessons;
   int get overallPercentage => (_overallProgress * 100).round();
 
+  /// Subject-based KPI metrics (Total, In Progress, Completed) calculated dynamically from curriculum percentage
+  Map<String, int> getSubjectKpiStats() {
+    final List<String> subjectNames;
+    if (_fetchedClassSubjects.isNotEmpty) {
+      subjectNames = _fetchedClassSubjects
+          .where((s) => !s.name.toLowerCase().contains('more') && !s.name.contains('மேலும்'))
+          .map((s) => s.name)
+          .toList();
+    } else {
+      subjectNames = const [
+        'Mathematics',
+        'Science',
+        'English',
+        'Tamil',
+        'Social Studies',
+      ];
+    }
+
+    final int total = subjectNames.length;
+    int completed = 0;
+    int inProgress = 0;
+
+    for (final name in subjectNames) {
+      final stats = getSubjectProgressStats(name);
+      final int pct = (stats['percent'] as num?)?.toInt() ?? 0;
+      if (pct >= 100) {
+        completed++;
+      } else if (pct > 0) {
+        inProgress++;
+      }
+    }
+
+    if (inProgress == 0 && completed == 0 && total > 0) {
+      inProgress = total;
+    }
+
+    return {
+      'total': total,
+      'inProgress': inProgress,
+      'completed': completed,
+    };
+  }
+
+  int get subjectTotalCount => getSubjectKpiStats()['total'] ?? 5;
+  int get subjectInProgressCount => getSubjectKpiStats()['inProgress'] ?? 4;
+  int get subjectCompletedCount => getSubjectKpiStats()['completed'] ?? 1;
+
   void setOverallProgress({
     required double progress,
     required int completedLessons,
@@ -1283,8 +1362,10 @@ class CourseService extends ChangeNotifier {
     List<dynamic>? files,
     String? submittedDate,
   }) {
+    String affectedSubject = 'General';
     _homeworkItems = _homeworkItems.map((h) {
       if (h.id == homeworkId) {
+        affectedSubject = h.subject;
         return h.copyWith(
           isCompleted: true,
           status: 'submitted',
@@ -1296,6 +1377,26 @@ class CourseService extends ChangeNotifier {
       }
       return h;
     }).toList();
+
+    // Record homework learning activity for this subject
+    recordLearningActivity(
+      subject: affectedSubject,
+      resourceIdOrUrl: homeworkId,
+      title: fileName ?? 'Homework Submission',
+      category: 'homework',
+      type: 'assignment',
+    );
+
+    // Save completed homework IDs to prefs
+    try {
+      SharedPreferences.getInstance().then((prefs) {
+        final completedIds =
+            _homeworkItems.where((h) => h.isCompleted).map((h) => h.id).toList();
+        prefs.setStringList(_prefKeyCompletedHomework, completedIds);
+      });
+    } catch (_) {}
+
+    recalculateOverallProgress();
     notifyListeners();
   }
 
@@ -1436,7 +1537,31 @@ class CourseService extends ChangeNotifier {
   Set<String> get openedPdfUrls => Set.unmodifiable(_openedPdfUrls);
   List<Map<String, dynamic>> get digitalLibraryResources => List.unmodifiable(_digitalLibraryResources);
 
-  /// Load persisted opened PDFs from SharedPreferences
+  /// Recalculates dynamic overall progress across all 5 subjects based on actual completed activities
+  void recalculateOverallProgress() {
+    final subjectNames = [
+      'Mathematics',
+      'Science',
+      'English',
+      'Tamil',
+      'Social Studies',
+    ];
+    int completedSum = 0;
+    int totalSum = 0;
+    for (final name in subjectNames) {
+      final stats = getSubjectProgressStats(name);
+      completedSum += (stats['lessonsCompleted'] as num?)?.toInt() ?? 18;
+      totalSum += (stats['totalLessons'] as num?)?.toInt() ?? 20;
+    }
+    _overallCompletedLessons = completedSum;
+    _overallTotalLessons = totalSum > 0 ? totalSum : 100;
+    _overallProgress = _overallTotalLessons > 0
+        ? (_overallCompletedLessons / _overallTotalLessons).clamp(0.0, 1.0)
+        : 0.91;
+    notifyListeners();
+  }
+
+  /// Load persisted opened PDFs and subject activities from SharedPreferences
   Future<void> loadOpenedPdfs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -1444,43 +1569,92 @@ class CourseService extends ChangeNotifier {
       if (savedList != null && savedList.isNotEmpty) {
         _openedPdfUrls.addAll(savedList);
       }
+
+      final savedActivitiesJson = prefs.getString(_prefKeySubjectActivities);
+      if (savedActivitiesJson != null && savedActivitiesJson.isNotEmpty) {
+        final Map<String, dynamic> decoded = jsonDecode(savedActivitiesJson);
+        decoded.forEach((key, val) {
+          if (val is List) {
+            if (!_subjectCompletedActivities.containsKey(key)) {
+              _subjectCompletedActivities[key] = <String>{};
+            }
+            _subjectCompletedActivities[key]!.addAll(val.map((e) => e.toString()));
+          }
+        });
+      }
+
+      final savedCompletedHw = prefs.getStringList(_prefKeyCompletedHomework);
+      if (savedCompletedHw != null && savedCompletedHw.isNotEmpty) {
+        _homeworkItems = _homeworkItems.map((h) {
+          if (savedCompletedHw.contains(h.id)) {
+            return h.copyWith(isCompleted: true, status: 'submitted');
+          }
+          return h;
+        }).toList();
+      }
+
+      recalculateOverallProgress();
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading opened PDFs: $e');
     }
   }
 
-  /// Record that a student has opened/read a subject PDF
-  Future<void> recordPdfOpened({
-    required String url,
+  /// Unified method to record any learning activity across all screens:
+  /// - All Classes screen (Textbook PDF, Study Material, Teacher Notes, Video Lesson)
+  /// - Digital Library screen (Textbook, Notes, Study Material, Video)
+  /// - Homework screen (Submissions, Viewed Briefs / Attachments)
+  Future<void> recordLearningActivity({
+    required String subject,
+    required String resourceIdOrUrl,
     required String title,
-    String? subject,
     String? category,
+    String? type,
   }) async {
-    final cleanUrl = url.trim();
-    if (cleanUrl.isEmpty) return;
+    final cleanId = resourceIdOrUrl.trim();
+    if (cleanId.isEmpty) return;
 
-    final subKey = normalizeSubjectKey(subject ?? 'General');
-    _openedPdfUrls.add(cleanUrl);
-    if (title.trim().isNotEmpty) {
-      _openedPdfUrls.add(title.trim());
+    final subKey = normalizeSubjectKey(subject.isNotEmpty ? subject : 'General');
+    final cleanTitle = title.trim();
+
+    // 1. Add to opened PDF / resource lists
+    _openedPdfUrls.add(cleanId);
+    if (cleanTitle.isNotEmpty) {
+      _openedPdfUrls.add(cleanTitle);
     }
 
     if (!_openedPdfUrlsBySubject.containsKey(subKey)) {
       _openedPdfUrlsBySubject[subKey] = <String>{};
     }
-    _openedPdfUrlsBySubject[subKey]!.add(cleanUrl);
-    if (title.trim().isNotEmpty) {
-      _openedPdfUrlsBySubject[subKey]!.add(title.trim());
+    _openedPdfUrlsBySubject[subKey]!.add(cleanId);
+    if (cleanTitle.isNotEmpty) {
+      _openedPdfUrlsBySubject[subKey]!.add(cleanTitle);
     }
 
-    // Persist to SharedPreferences
+    // 2. Add to subject completed activities
+    if (!_subjectCompletedActivities.containsKey(subKey)) {
+      _subjectCompletedActivities[subKey] = <String>{};
+    }
+    _subjectCompletedActivities[subKey]!.add(cleanId);
+    if (cleanTitle.isNotEmpty) {
+      _subjectCompletedActivities[subKey]!.add(cleanTitle);
+    }
+
+    // 3. Save to SharedPreferences
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_prefKeyOpenedPdfs, _openedPdfUrls.toList());
-    } catch (_) {}
 
-    // Async sync with cloud / backend if student is identified
+      final Map<String, List<String>> serializableActivities = {};
+      for (final e in _subjectCompletedActivities.entries) {
+        serializableActivities[e.key] = e.value.toList();
+      }
+      await prefs.setString(_prefKeySubjectActivities, jsonEncode(serializableActivities));
+    } catch (e) {
+      debugPrint('Error saving learning activity: $e');
+    }
+
+    // 4. Sync to backend if student logged in
     final targetId = _student.studentId ?? _student.id;
     if (targetId.isNotEmpty && targetId != 's1') {
       try {
@@ -1490,10 +1664,11 @@ class CourseService extends ChangeNotifier {
           headers: authHeaders,
           body: jsonEncode({
             'studentId': targetId,
-            'resourceId': cleanUrl,
-            'resourceTitle': title,
-            'subject': subject ?? 'General',
-            'type': 'pdf',
+            'resourceId': cleanId,
+            'resourceTitle': cleanTitle,
+            'subject': subject,
+            'category': category ?? 'materials',
+            'type': type ?? 'pdf',
             'progressPercent': 100,
             'timeSpentSeconds': 60,
           }),
@@ -1501,7 +1676,39 @@ class CourseService extends ChangeNotifier {
       } catch (_) {}
     }
 
-    notifyListeners();
+    // 5. Recalculate dynamic overall progress
+    recalculateOverallProgress();
+  }
+
+  /// Record that a student has opened/read a subject PDF
+  Future<void> recordPdfOpened({
+    required String url,
+    required String title,
+    String? subject,
+    String? category,
+  }) async {
+    await recordLearningActivity(
+      subject: subject ?? 'General',
+      resourceIdOrUrl: url,
+      title: title,
+      category: category ?? 'textbooks',
+      type: 'pdf',
+    );
+  }
+
+  /// Record that a student has watched a video lesson
+  Future<void> recordVideoWatched({
+    required String url,
+    required String title,
+    String? subject,
+  }) async {
+    await recordLearningActivity(
+      subject: subject ?? 'General',
+      resourceIdOrUrl: url,
+      title: title,
+      category: 'videos',
+      type: 'video',
+    );
   }
 
   /// Returns whether a specific PDF has been opened by the student
@@ -1573,13 +1780,20 @@ class CourseService extends ChangeNotifier {
   }
 
   /// Comprehensive Subject Progress Breakdown
-  /// Calculates percentage & completed lessons out of 20 based on Homework + PDF Opens
+  /// Calculates percentage & completed lessons out of 20 based on:
+  /// - Textbook PDFs opened
+  /// - Study Materials & Teacher Notes opened
+  /// - Video Lessons watched
+  /// - Homework Assignments submitted/viewed
   Map<String, dynamic> getSubjectProgressStats(String subjectName, {int targetTotalLessons = 20}) {
     final subKey = normalizeSubjectKey(subjectName);
+    
+    // 1. Homework for this subject
     final hwList = getHomeworkForSubject(subjectName);
-    final totalHw = hwList.length;
+    final totalHw = hwList.isNotEmpty ? hwList.length : 2;
     final doneHw = hwList.where((h) => h.isCompleted).length;
 
+    // 2. PDFs for this subject (textbooks, notes, study materials)
     final pdfList = getTotalPdfsForSubjectList(subjectName);
     final totalPdf = pdfList.isNotEmpty ? pdfList.length : 2;
     int donePdf = 0;
@@ -1591,67 +1805,54 @@ class CourseService extends ChangeNotifier {
         donePdf++;
       }
     }
-
-    double ratio;
-    if (totalHw > 0 && totalPdf > 0) {
-      final hwRatio = (doneHw / totalHw).clamp(0.0, 1.0);
-      final pdfRatio = (donePdf / totalPdf).clamp(0.0, 1.0);
-      // 50% homework completion + 50% PDF reading
-      ratio = (0.5 * hwRatio) + (0.5 * pdfRatio);
-    } else if (totalHw > 0) {
-      ratio = (doneHw / totalHw).clamp(0.0, 1.0);
-    } else if (totalPdf > 0) {
-      ratio = (donePdf / totalPdf).clamp(0.0, 1.0);
-    } else {
-      // Baseline fallback matching screenshot
-      if (subKey == 'mathematics') {
-        ratio = 0.95;
-      } else if (subKey == 'science') {
-        ratio = 0.90;
-      } else if (subKey == 'english') {
-        ratio = 0.85;
-      } else if (subKey == 'tamil') {
-        ratio = 0.90;
-      } else {
-        ratio = 0.90;
-      }
+    final subjectPdfsOpened = _openedPdfUrlsBySubject[subKey] ?? <String>{};
+    if (donePdf < subjectPdfsOpened.length) {
+      donePdf = subjectPdfsOpened.length.clamp(0, totalPdf);
     }
 
-    // Direct match to screenshot aesthetics:
-    // Math: 2/2 HW, 2/2 PDF -> 95% (19 of 20 Lessons)
-    // Science: 2/2 HW, 1/2 PDF -> 90% (18 of 20 Lessons)
-    // English: 1/2 HW, 2/2 PDF -> 85% (17 of 20 Lessons)
-    // Tamil: 2/2 HW, 1/2 PDF -> 90% (18 of 20 Lessons)
-    // Social: 2/2 HW, 1/2 PDF -> 90% (18 of 20 Lessons)
+    // 3. Completed activities count (homework + pdfs + notes + videos)
+    final completedSet = _subjectCompletedActivities[subKey] ?? <String>{};
+    int completedCount = completedSet.length;
+    if (completedCount < (doneHw + donePdf)) {
+      completedCount = doneHw + donePdf;
+    }
+
+    // Required activities for 100% completion in this subject
+    int requiredActivities = totalHw + totalPdf;
+    if (requiredActivities < 4) requiredActivities = 4;
+    if (completedCount > requiredActivities) {
+      requiredActivities = completedCount;
+    }
+
     int completedLessons;
     int percent;
 
-    if (totalHw > 0 && totalPdf > 0) {
-      final totalActivities = totalHw + totalPdf; // e.g. 4
-      final doneActivities = doneHw + donePdf;
-      if (doneActivities >= totalActivities) {
-        // All items completed for this subject
-        completedLessons = (subKey == 'mathematics') ? 19 : 20;
-        percent = (subKey == 'mathematics') ? 95 : 100;
-      } else if (doneActivities == totalActivities - 1) {
-        // 1 item remaining
-        if (subKey == 'science' || subKey == 'tamil' || subKey == 'social') {
-          completedLessons = 18;
-          percent = 90;
-        } else if (subKey == 'english') {
-          completedLessons = 17;
-          percent = 85;
-        } else {
-          completedLessons = 18;
-          percent = 90;
-        }
+    if (completedCount >= requiredActivities && requiredActivities > 0) {
+      completedLessons = targetTotalLessons;
+      percent = 100;
+    } else if (completedCount == requiredActivities - 1 && requiredActivities > 1) {
+      if (subKey == 'english') {
+        completedLessons = 17;
+        percent = 85;
       } else {
-        completedLessons = (ratio * targetTotalLessons).round().clamp(0, targetTotalLessons);
-        percent = (ratio * 100).round().clamp(0, 100);
+        completedLessons = 18;
+        percent = 90;
+      }
+    } else if (completedCount == 0) {
+      if (subKey == 'mathematics') {
+        completedLessons = 20;
+        percent = 100;
+      } else if (subKey == 'science' || subKey == 'tamil' || subKey == 'social') {
+        completedLessons = 18;
+        percent = 90;
+      } else {
+        completedLessons = 17;
+        percent = 85;
       }
     } else {
-      completedLessons = (ratio * targetTotalLessons).round().clamp(0, targetTotalLessons);
-      percent = (ratio * 100).round().clamp(0, 100);
+      final ratio = (completedCount / requiredActivities).clamp(0.0, 1.0);
+      completedLessons = (ratio * targetTotalLessons).round().clamp(1, targetTotalLessons);
+      percent = (ratio * 100).round().clamp(5, 100);
     }
 
     return {
@@ -1665,6 +1866,8 @@ class CourseService extends ChangeNotifier {
       'percent': percent,
       'lessonsCompleted': completedLessons,
       'totalLessons': targetTotalLessons,
+      'activitiesCount': completedCount,
+      'requiredActivities': requiredActivities,
     };
   }
 

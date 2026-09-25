@@ -1475,6 +1475,16 @@ class _HomeworkAssignmentsScreenState extends State<HomeworkAssignmentsScreen> {
   // ─── 4. VIEW DETAILS MODAL ──────────────────────────────────────────────
   void _showViewDetailsDialog(
       BuildContext context, HomeworkItem hw, CourseService courseService) {
+    try {
+      courseService.recordLearningActivity(
+        subject: hw.subject,
+        resourceIdOrUrl: hw.id,
+        title: hw.title,
+        category: 'homework',
+        type: 'assignment',
+      );
+    } catch (_) {}
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
